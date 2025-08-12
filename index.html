@@ -151,15 +151,12 @@ async function apiGet(params){
   return res.json();
 }
 async function apiPost(payload){
-  const res = await fetch(API_BASE, {
-    method:'POST',
-    headers:{ 'Content-Type':'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if(!res.ok){
-    const t = await res.text().catch(()=> '');
-    throw new Error('POST ' + res.status + ' ' + t);
-  }
+  // プリフライト回避のため、ヘッダを付けず FormData で送る
+  const fd = new FormData();
+  fd.append('body', JSON.stringify(payload));
+
+  const res = await fetch(API_BASE, { method:'POST', body: fd });
+  if(!res.ok){ const t=await res.text().catch(()=> ''); throw new Error('POST '+res.status+' '+t); }
   return res.json();
 }
 
