@@ -1,40 +1,38 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>運転日誌（ローカル保存）</title>
-  <style>
-    :root{--bg:#f7f7fb;--card:#fff;--text:#222;--muted:#666;--accent:#2f6feb;--border:#e5e7eb}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    header{padding:16px 20px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:2}
-    header h1{margin:0;font-size:18px}
-    main{max-width:980px;margin:20px auto;padding:0 16px;display:grid;gap:16px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
-    .section{padding:16px}
-    .grid{display:grid;gap:12px}
-    .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-    input,select,button,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
-    input[type="checkbox"]{width:auto}
-    .row{display:flex;gap:10px;align-items:center}
-    .btn{background:var(--accent);color:#fff;border:none;cursor:pointer}
-    .btn.secondary{background:#fff;color:#222;border:1px solid var(--border)}
-    .right{display:flex;gap:10px;justify-content:flex-end}
-    table{width:100%;border-collapse:collapse;font-size:13px}
-    th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
-    th{background:#fafafe;color:#444;font-weight:600}
-    .muted{color:var(--muted)}
-    .totals{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    @media (max-width:720px){.grid.cols-2,.grid.cols-3{grid-template-columns:1fr}}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>運転日誌（同期版）</title>
+<style>
+:root{--bg:#f7f7fb;--card:#fff;--text:#222;--muted:#666;--accent:#2f6feb;--border:#e5e7eb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+header{padding:16px 20px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:2}
+header h1{margin:0;font-size:18px}
+main{max-width:980px;margin:20px auto;padding:0 16px;display:grid;gap:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.section{padding:16px}
+.grid{display:grid;gap:12px}
+.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+input,select,button{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
+input[type="checkbox"]{width:auto}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{background:var(--accent);color:#fff;border:none;cursor:pointer}
+.btn.secondary{background:#fff;color:#222;border:1px solid var(--border)}
+.right{display:flex;gap:10px;justify-content:flex-end}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+th{background:#fafafe;color:#444;font-weight:600}
+.muted{color:var(--muted)}
+.totals{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+@media (max-width:720px){.grid.cols-2,.grid.cols-3{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-<header>
-  <h1>運転日誌</h1>
-</header>
+<header><h1>運転日誌</h1></header>
 
 <main>
   <!-- 入力フォーム -->
@@ -142,248 +140,243 @@
 </main>
 
 <script>
-  // ---- Utils ----
-  const jpWeek = ["日","月","火","水","木","金","土"];
-  const pad = n => String(n).padStart(2,"0");
-  const isNum = v => typeof v === "number" && !Number.isNaN(v);
-  const toNumOrNull = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
-  const DEST_KEY = "driveLog:destinations";
+// === ここにあなたのGAS URL（/exec） ===
+const API_BASE = 'https://script.google.com/macros/s/AKfycbyMxpKLVGJuL5m6e-2Pxe4Hq-10i634lwPQ8N2By3hgVvMwodo6Y9wroMM7Lb8ryRH3ng/exec';
 
-  function makeTimeOptions(){
-    const selStart = document.getElementById("startTime");
-    const selEnd = document.getElementById("endTime");
-    selStart.innerHTML = ""; selEnd.innerHTML = "";
-    for(let h=0; h<24; h++){
-      for(let m=0; m<60; m+=10){
-        const v = `${pad(h)}:${pad(m)}`;
-        const o1 = document.createElement("option");
-        o1.value=v; o1.textContent=v;
-        const o2 = o1.cloneNode(true);
-        selStart.appendChild(o1); selEnd.appendChild(o2);
-      }
+// ---- API helpers ----
+async function apiGet(params){
+  const url = API_BASE + '?' + new URLSearchParams(params).toString();
+  const res = await fetch(url, { method:'GET' });
+  return res.json();
+}
+async function apiPost(payload){
+  const res = await fetch(API_BASE, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+// ---- Utils ----
+const jpWeek = ["日","月","火","水","木","金","土"];
+const pad = n => String(n).padStart(2,"0");
+const isNum = v => typeof v === "number" && !Number.isNaN(v);
+const toNumOrNull = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+
+function makeTimeOptions(){
+  const selStart = document.getElementById("startTime");
+  const selEnd = document.getElementById("endTime");
+  selStart.innerHTML = ""; selEnd.innerHTML = "";
+  for(let h=0; h<24; h++){
+    for(let m=0; m<60; m+=10){
+      const v = `${pad(h)}:${pad(m)}`;
+      selStart.appendChild(new Option(v, v));
+      selEnd.appendChild(new Option(v, v));
     }
-    selStart.value="09:00"; selEnd.value="18:00";
   }
-  function getWeekdayStr(dateStr){
-    if(!dateStr) return "";
-    const d = new Date(dateStr + "T00:00:00");
-    if(Number.isNaN(d.getTime())) return "";
-    return jpWeek[d.getDay()];
-  }
-  function ymKey(dateStr){
-    const d = new Date(dateStr + "T00:00:00");
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-  }
-  function calcDistance(){
-    const s = toNumOrNull(document.getElementById("odoStart").value);
-    const e = toNumOrNull(document.getElementById("odoEnd").value);
-    const out = document.getElementById("distance");
-    if(isNum(s) && isNum(e) && e>=s) out.value=(e-s).toFixed(1);
-    else out.value="";
-  }
+  selStart.value="09:00"; selEnd.value="18:00";
+}
+function getWeekdayStr(dateStr){
+  if(!dateStr) return "";
+  const d = new Date(dateStr + "T00:00:00");
+  if(Number.isNaN(d.getTime())) return "";
+  return jpWeek[d.getDay()];
+}
+function ymKey(dateStr){
+  const d = new Date(dateStr + "T00:00:00");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+}
+function calcDistance(){
+  const s = toNumOrNull(document.getElementById("odoStart").value);
+  const e = toNumOrNull(document.getElementById("odoEnd").value);
+  const out = document.getElementById("distance");
+  if(isNum(s) && isNum(e) && e>=s) out.value=(e-s).toFixed(1);
+  else out.value="";
+}
 
-  // ---- Storage helpers ----
-  function loadMonth(month){
-    try{
-      const key = `driveLog:${month}`;
-      const data = JSON.parse(localStorage.getItem(key) || "[]");
-      return Array.isArray(data) ? data : [];
-    }catch{ return []; }
-  }
-  function saveMonth(month, rows){
-    const key = `driveLog:${month}`;
-    localStorage.setItem(key, JSON.stringify(rows));
-  }
-  function getDestHistory(){
-    try{
-      const a = JSON.parse(localStorage.getItem(DEST_KEY) || "[]");
-      return Array.isArray(a) ? a : [];
-    }catch{ return []; }
-  }
-  function pushDestHistory(value){
-    const v = (value||"").trim();
-    if(!v) return;
-    let list = getDestHistory();
-    list = [v, ...list.filter(x=>x!==v)].slice(0,5); // 重複排除＆最大5件
-    localStorage.setItem(DEST_KEY, JSON.stringify(list));
-    renderDestList();
-  }
-  function renderDestList(){
-    const list = getDestHistory();
-    const dl = document.getElementById("destList");
-    dl.innerHTML = "";
-    list.forEach(txt=>{
-      const opt = document.createElement("option");
-      opt.value = txt;
-      dl.appendChild(opt);
-    });
-  }
+// ---- Storage helpers (Server / GAS) ----
+async function loadMonth(month){
+  const j = await apiGet({ action:'list', month });
+  if(!j.ok) throw new Error(j.error||'list failed');
+  return Array.isArray(j.rows) ? j.rows : [];
+}
+async function saveRowToServer(row){
+  const j = await apiPost({ action:'save', row });
+  if(!j.ok) throw new Error(j.error||'save failed');
+}
+async function deleteMonthOnServer(month){
+  const j = await apiPost({ action:'deletemonth', month });
+  if(!j.ok) throw new Error(j.error||'delete failed');
+}
+async function fetchDestHistory(){
+  const j = await apiGet({ action:'destlist' });
+  if(!j.ok) throw new Error(j.error||'destlist failed');
+  return Array.isArray(j.list) ? j.list : [];
+}
+function renderDestListFrom(list){
+  const dl = document.getElementById("destList");
+  dl.innerHTML = "";
+  list.forEach(txt => dl.appendChild(new Option(txt, txt)));
+}
 
-  // ---- Table render（日付→開始の昇順で並べ替え）----
-  function safeFixed(value, digits=1){ return isNum(value) ? value.toFixed(digits) : ""; }
+// ---- Table render（日付→開始の昇順で並べ替え・サーバ版）----
+function safeFixed(value, digits=1){ return isNum(value) ? value.toFixed(digits) : ""; }
 
-  function renderTable(){
-    const month = document.getElementById("monthFilter").value;
-    const tbody = document.querySelector("#table tbody");
-    tbody.innerHTML = "";
-    let total = 0;
+async function renderTable(){
+  const month = document.getElementById("monthFilter").value;
+  const tbody = document.querySelector("#table tbody");
+  tbody.innerHTML = "";
+  let total = 0;
 
-    const rows = loadMonth(month)
-      .slice()
-      .sort((a,b)=>{
-        const da = new Date((a.date||"") + "T00:00:00").getTime();
-        const db = new Date((b.date||"") + "T00:00:00").getTime();
-        if(da !== db) return da - db; // 日付昇順
-        return String(a.startTime||"").localeCompare(String(b.startTime||"")); // 同日は開始時刻で
-      });
-
-    rows.forEach((r) => {
-      const tr = document.createElement("tr");
-      const cells = [
-        r.date || "", r.weekday || "",
-        r.startTime || "", r.endTime || "",
-        safeFixed(r.odoStart), safeFixed(r.odoEnd), safeFixed(r.distance),
-        r.driver || "", r.destination || "",
-        r.alcoholBefore ? "✓" : "", r.alcoholAfter ? "✓" : ""
-      ];
-      cells.forEach(c=>{
-        const td=document.createElement("td"); td.textContent=(c ?? ""); tr.appendChild(td);
-      });
-      const tdAct = document.createElement("td");
-      const del = document.createElement("button");
-      del.textContent="削除"; del.className="btn secondary";
-      del.onclick = () => {
-        const base = loadMonth(month);
-        const idx = base.findIndex(x =>
-          x.date===r.date && x.startTime===r.startTime && x.endTime===r.endTime &&
-          x.driver===r.driver && x.destination===r.destination
-        );
-        const updated = base.slice();
-        if(idx>=0) updated.splice(idx,1);
-        saveMonth(month, updated);
-        renderTable();
-      };
-      tdAct.appendChild(del); tr.appendChild(tdAct);
-      tbody.appendChild(tr);
-
-      if(isNum(r.distance)) total += r.distance;
-    });
-    document.getElementById("monthlyTotal").textContent = total.toFixed(1);
-  }
-
-  function exportCSV(){
-    const m = document.getElementById("monthFilter").value;
-    const rows = loadMonth(m).slice().sort((a,b)=>{
-      const da = new Date((a.date||"")+"T00:00:00").getTime();
-      const db = new Date((b.date||"")+"T00:00:00").getTime();
-      if(da!==db) return da-db;
+  const rows = (await loadMonth(month))
+    .slice()
+    .sort((a,b)=>{
+      const da = new Date((a.date||"") + "T00:00:00").getTime();
+      const db = new Date((b.date||"") + "T00:00:00").getTime();
+      if(da !== db) return da - db;
       return String(a.startTime||"").localeCompare(String(b.startTime||""));
     });
-    const header = ["日付","曜日","開始","終了","メーター開始","メーター終了","距離(km)","運転者","行き先","酒前","酒後"];
-    const lines = [header.join(",")].concat(rows.map(r=>[
-      r.date||"", r.weekday||"", r.startTime||"", r.endTime||"",
-      isNum(r.odoStart)?r.odoStart:"", isNum(r.odoEnd)?r.odoEnd:"", isNum(r.distance)?r.distance:"",
-      `"${String(r.driver||"").replace(/"/g,'""')}"`,
-      `"${String(r.destination||"").replace(/"/g,'""')}"`,
-      r.alcoholBefore?1:0, r.alcoholAfter?1:0
-    ].join(",")));
-    const blob = new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `drivelog_${m}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
 
-  // ---- Init ----
-  (function init(){
-    makeTimeOptions();
-    renderDestList();
-
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-    document.getElementById("date").value = todayStr;
-    document.getElementById("weekday").textContent = `（${getWeekdayStr(todayStr)}）`;
-    document.getElementById("monthFilter").value = ymKey(todayStr);
-
-    // Events
-    document.getElementById("date").addEventListener("change", e=>{
-      const d = e.target.value;
-      document.getElementById("weekday").textContent = `（${getWeekdayStr(d)}）`;
-      document.getElementById("monthFilter").value = ymKey(d);
-      renderTable();
+  rows.forEach((r) => {
+    const tr = document.createElement("tr");
+    const cells = [
+      r.date || "", r.weekday || "",
+      r.startTime || "", r.endTime || "",
+      safeFixed(r.odoStart), safeFixed(r.odoEnd), safeFixed(r.distance),
+      r.driver || "", r.destination || "",
+      r.alcoholBefore ? "✓" : "", r.alcoholAfter ? "✓" : ""
+    ];
+    cells.forEach(c=>{
+      const td=document.createElement("td"); td.textContent=(c ?? ""); tr.appendChild(td);
     });
-    document.getElementById("odoStart").addEventListener("input", calcDistance);
-    document.getElementById("odoEnd").addEventListener("input", calcDistance);
+    const tdAct = document.createElement("td");
+    const del = document.createElement("button");
+    del.textContent="削除"; del.className="btn secondary";
+    del.onclick = async () => {
+      if(!confirm(`${month} の全データを削除します。よろしいですか？`)) return;
+      await deleteMonthOnServer(month);
+      await renderTable();
+    };
+    tdAct.appendChild(del); tr.appendChild(tdAct);
+    tbody.appendChild(tr);
+    if(isNum(r.distance)) total += r.distance;
+  });
+  document.getElementById("monthlyTotal").textContent = total.toFixed(1);
+}
 
-    document.getElementById("save").addEventListener("click", ()=>{
-      try{
-        const date = document.getElementById("date").value;
-        if(!date){ alert("日付を入力してください"); return; }
+// CSVエクスポート（サーバから読み直して生成）
+async function exportCSV(){
+  const m = document.getElementById("monthFilter").value;
+  const rows = (await loadMonth(m)).slice().sort((a,b)=>{
+    const da = new Date((a.date||"")+"T00:00:00").getTime();
+    const db = new Date((b.date||"")+"T00:00:00").getTime();
+    if(da!==db) return da-db;
+    return String(a.startTime||"").localeCompare(String(b.startTime||""));
+  });
+  const header = ["日付","曜日","開始","終了","メーター開始","メーター終了","距離(km)","運転者","行き先","酒前","酒後"];
+  const lines = [header.join(",")].concat(rows.map(r=>[
+    r.date||"", r.weekday||"", r.startTime||"", r.endTime||"",
+    isNum(r.odoStart)?r.odoStart:"", isNum(r.odoEnd)?r.odoEnd:"", isNum(r.distance)?r.distance:"",
+    `"${String(r.driver||"").replace(/"/g,'""')}"`,
+    `"${String(r.destination||"").replace(/"/g,'""')}"`,
+    r.alcoholBefore?1:0, r.alcoholAfter?1:0
+  ].join(",")));
+  const blob = new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `drivelog_${m}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
-        const odoStart = toNumOrNull(document.getElementById("odoStart").value);
-        const odoEnd   = toNumOrNull(document.getElementById("odoEnd").value);
-        if(isNum(odoStart) && isNum(odoEnd) && odoEnd < odoStart){
-          alert("メーター終了はメーター開始以上にしてください");
-          return;
-        }
+// ---- Init ----
+(function init(){
+  makeTimeOptions();
 
-        const distanceField = document.getElementById("distance").value;
-        const calc = (isNum(odoStart)&&isNum(odoEnd)) ? (odoEnd - odoStart) : null;
-        const distance = toNumOrNull(distanceField) ?? calc;
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+  document.getElementById("date").value = todayStr;
+  document.getElementById("weekday").textContent = `（${getWeekdayStr(todayStr)}）`;
+  document.getElementById("monthFilter").value = ymKey(todayStr);
 
-        const dest = (document.getElementById("destination").value || "").trim();
-
-        const row = {
-          date,
-          weekday: getWeekdayStr(date),
-          startTime: document.getElementById("startTime").value || "",
-          endTime: document.getElementById("endTime").value || "",
-          odoStart: odoStart ?? null,
-          odoEnd:   odoEnd   ?? null,
-          distance: distance ?? null,
-          driver: (document.getElementById("driver").value || "").trim(),
-          destination: dest,
-          alcoholBefore: document.getElementById("alcoholBefore").checked,
-          alcoholAfter: document.getElementById("alcoholAfter").checked
-        };
-
-        const month = ymKey(date);
-        const rows = loadMonth(month);
-        rows.push(row);
-        saveMonth(month, rows);
-
-        // 行き先履歴（最大5件）
-        pushDestHistory(dest);
-
-        renderTable();
-        alert("保存しました");
-      }catch(err){
-        console.error(err);
-        alert("保存中にエラーが発生しました。入力内容をご確認ください。");
-      }
-    });
-
-    document.getElementById("clearForm").addEventListener("click", ()=>{
-      ["driver","destination","odoStart","odoEnd","distance"].forEach(id=>document.getElementById(id).value="");
-      document.getElementById("startTime").value="09:00";
-      document.getElementById("endTime").value="18:00";
-      document.getElementById("alcoholBefore").checked=false;
-      document.getElementById("alcoholAfter").checked=false;
-    });
-
-    document.getElementById("monthFilter").addEventListener("change", renderTable);
-    document.getElementById("exportCsv").addEventListener("click", exportCSV);
-    document.getElementById("deleteMonth").addEventListener("click", ()=>{
-      const m = document.getElementById("monthFilter").value;
-      if(confirm(`${m} の全データを削除します。よろしいですか？`)){
-        saveMonth(m, []);
-        renderTable();
-      }
-    });
-
+  // Events
+  document.getElementById("date").addEventListener("change", e=>{
+    const d = e.target.value;
+    document.getElementById("weekday").textContent = `（${getWeekdayStr(d)}）`;
+    document.getElementById("monthFilter").value = ymKey(d);
     renderTable();
+  });
+  document.getElementById("odoStart").addEventListener("input", calcDistance);
+  document.getElementById("odoEnd").addEventListener("input", calcDistance);
+
+  document.getElementById("save").addEventListener("click", async ()=>{
+    try{
+      const date = document.getElementById("date").value;
+      if(!date){ alert("日付を入力してください"); return; }
+
+      const odoStart = toNumOrNull(document.getElementById("odoStart").value);
+      const odoEnd   = toNumOrNull(document.getElementById("odoEnd").value);
+      if(isNum(odoStart) && isNum(odoEnd) && odoEnd < odoStart){
+        alert("メーター終了はメーター開始以上にしてください");
+        return;
+      }
+
+      const distanceField = document.getElementById("distance").value;
+      const calc = (isNum(odoStart)&&isNum(odoEnd)) ? (odoEnd - odoStart) : null;
+      const distance = toNumOrNull(distanceField) ?? calc;
+
+      const row = {
+        date,
+        weekday: getWeekdayStr(date),
+        startTime: document.getElementById("startTime").value || "",
+        endTime: document.getElementById("endTime").value || "",
+        odoStart: odoStart ?? null,
+        odoEnd:   odoEnd   ?? null,
+        distance: distance ?? null,
+        driver: (document.getElementById("driver").value || "").trim(),
+        destination: (document.getElementById("destination").value || "").trim(),
+        alcoholBefore: document.getElementById("alcoholBefore").checked,
+        alcoholAfter: document.getElementById("alcoholAfter").checked
+      };
+
+      await saveRowToServer(row);
+      alert("保存しました");
+
+      const list = await fetchDestHistory();
+      renderDestListFrom(list);
+
+      await renderTable();
+    }catch(err){
+      console.error(err);
+      alert("保存中にエラー: " + err.message);
+    }
+  });
+
+  document.getElementById("clearForm").addEventListener("click", ()=>{
+    ["driver","destination","odoStart","odoEnd","distance"].forEach(id=>document.getElementById(id).value="");
+    document.getElementById("startTime").value="09:00";
+    document.getElementById("endTime").value="18:00";
+    document.getElementById("alcoholBefore").checked=false;
+    document.getElementById("alcoholAfter").checked=false;
+  });
+
+  document.getElementById("monthFilter").addEventListener("change", ()=>renderTable());
+  document.getElementById("exportCsv").addEventListener("click", ()=>exportCSV());
+  document.getElementById("deleteMonth").addEventListener("click", async ()=>{
+    const m = document.getElementById("monthFilter").value;
+    if(confirm(`${m} の全データを削除します。よろしいですか？`)){
+      await deleteMonthOnServer(m);
+      await renderTable();
+    }
+  });
+
+  (async ()=>{
+    const list = await fetchDestHistory();
+    renderDestListFrom(list);
+    await renderTable();
   })();
+})();
 </script>
 </body>
 </html>
