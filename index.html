@@ -1,386 +1,545 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>運転日誌（同期版）</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>工程表アプリ</title>
 <style>
-:root{--bg:#f7f7fb;--card:#fff;--text:#222;--muted:#666;--accent:#2f6feb;--border:#e5e7eb}
+:root{
+  --bg:#f6f7fb;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --accent:#2563eb;
+  --accent-soft:#dbeafe;
+  --border:#e5e7eb;
+  --danger:#dc2626;
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-header{padding:16px 20px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:2}
-header h1{margin:0;font-size:18px}
-main{max-width:980px;margin:20px auto;padding:0 16px;display:grid;gap:16px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
-.section{padding:16px}
-.grid{display:grid;gap:12px}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP",sans-serif;
+  color:var(--text);
+  background:var(--bg);
+}
+header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:var(--card);
+  border-bottom:1px solid var(--border);
+}
+header .inner{
+  max-width:1100px;
+  margin:0 auto;
+  padding:16px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+header h1{
+  font-size:18px;
+  margin:0;
+}
+main{
+  max-width:1100px;
+  margin:18px auto 36px;
+  padding:0 16px;
+  display:grid;
+  gap:16px;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 4px 16px rgba(15,23,42,0.04);
+}
+.grid{
+  display:grid;
+  gap:12px;
+}
 .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-input,select,button{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
-input[type="checkbox"]{width:auto}
+label{
+  font-size:12px;
+  color:var(--muted);
+  display:block;
+  margin-bottom:6px;
+}
+input,select,button,textarea{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  font-size:14px;
+  font-family:inherit;
+  background:#fff;
+}
+textarea{resize:vertical;min-height:72px}
+button{
+  cursor:pointer;
+  transition:all .2s ease;
+}
+button:active{transform:scale(.98)}
+.btn{
+  background:var(--accent);
+  color:#fff;
+  border:none;
+}
+.btn.secondary{
+  background:#fff;
+  color:var(--text);
+  border:1px solid var(--border);
+}
+.btn.ghost{
+  background:transparent;
+  border:1px dashed var(--border);
+  color:var(--muted);
+}
+.btn.danger{
+  background:var(--danger);
+  border:none;
+  color:#fff;
+}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{background:var(--accent);color:#fff;border:none;cursor:pointer}
-.btn.secondary{background:#fff;color:#222;border:1px solid var(--border)}
-.right{display:flex;gap:10px;justify-content:flex-end}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
-th{background:#fafafe;color:#444;font-weight:600}
-.muted{color:var(--muted)}
-.totals{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-@media (max-width:720px){.grid.cols-2,.grid.cols-3{grid-template-columns:1fr}}
+.segmented{
+  display:flex;
+  gap:6px;
+  background:#f3f4f6;
+  padding:4px;
+  border-radius:999px;
+}
+.segmented button{
+  border:none;
+  padding:8px 14px;
+  border-radius:999px;
+  background:transparent;
+  color:var(--muted);
+  font-size:13px;
+}
+.segmented button.active{
+  background:#fff;
+  color:var(--text);
+  box-shadow:0 1px 6px rgba(15,23,42,0.12);
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+.helper{color:var(--muted);font-size:12px}
+.schedule-wrapper{
+  overflow:auto;
+  border-radius:12px;
+  border:1px solid var(--border);
+}
+.schedule{
+  min-width:680px;
+  border-collapse:collapse;
+  width:100%;
+  font-size:13px;
+}
+.schedule th,.schedule td{
+  border-bottom:1px solid var(--border);
+  padding:10px;
+  text-align:center;
+  white-space:nowrap;
+}
+.schedule th{
+  background:#f8fafc;
+  color:var(--muted);
+  font-weight:600;
+  position:sticky;
+  top:0;
+  z-index:2;
+}
+.schedule td.task-cell{
+  text-align:left;
+  min-width:140px;
+  position:sticky;
+  left:0;
+  background:#fff;
+  z-index:1;
+}
+.task-pill{
+  background:var(--accent-soft);
+  color:var(--accent);
+  padding:6px 10px;
+  border-radius:999px;
+  display:inline-block;
+  font-size:12px;
+}
+.timeline-cell{
+  min-width:48px;
+  height:42px;
+}
+.timeline-cell.active{
+  background:rgba(37,99,235,0.15);
+}
+.timeline-cell.today{
+  outline:2px solid rgba(37,99,235,0.35);
+  outline-offset:-2px;
+}
+.task-list{
+  display:grid;
+  gap:10px;
+}
+.task-item{
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+  display:grid;
+  gap:8px;
+}
+.task-item header{
+  position:static;
+  border:none;
+  background:transparent;
+}
+.task-item h3{margin:0;font-size:15px}
+.task-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--muted)}
+.task-actions{display:flex;gap:8px;flex-wrap:wrap}
+.note{background:#fef9c3;color:#92400e;border-radius:10px;padding:10px;font-size:12px}
+@media (max-width:860px){
+  .grid.cols-3{grid-template-columns:1fr}
+}
+@media (max-width:720px){
+  .grid.cols-2{grid-template-columns:1fr}
+  header .inner{flex-direction:column;align-items:flex-start}
+}
+@media (orientation:landscape){
+  body{font-size:15px}
+  .schedule{min-width:900px}
+  .timeline-cell{min-width:60px}
+}
 </style>
 </head>
 <body>
-<header><h1>運転日誌</h1></header>
+<header>
+  <div class="inner">
+    <div>
+      <h1>工程表（モバイル対応）</h1>
+      <div class="helper">2週間 / 1ヵ月の工程をワンタップで切り替え</div>
+    </div>
+    <div class="segmented" role="tablist" aria-label="表示切替">
+      <button type="button" class="active" data-range="14">2週間</button>
+      <button type="button" data-range="30">1ヵ月</button>
+    </div>
+  </div>
+</header>
 
 <main>
-  <!-- 入力フォーム -->
-  <section class="card section">
-    <div class="grid cols-3">
-      <div>
-        <label>日付（曜日は自動）</label>
-        <input type="date" id="date">
-        <div class="muted" id="weekday" aria-live="polite"></div>
+  <section class="card grid cols-2">
+    <div class="grid">
+      <div class="row" style="justify-content:space-between;gap:12px">
+        <div>
+          <div class="badge">📅 表示開始日</div>
+          <div class="helper">携帯の縦横変更で自動最適化</div>
+        </div>
+        <button class="btn secondary" id="todayBtn">今日に戻す</button>
       </div>
       <div>
-        <label>運転者名</label>
-        <input id="driver" placeholder="例）山田 太郎">
+        <label for="startDate">開始日</label>
+        <input type="date" id="startDate" />
       </div>
-      <div>
-        <label>行き先（直近5件を候補表示）</label>
-        <input id="destination" list="destList" placeholder="例）岡山営業所">
-        <datalist id="destList"></datalist>
-      </div>
+      <div class="note">入力はフォーム → 保存でOK。タスクをタップすると編集できます。</div>
     </div>
 
-    <div class="grid cols-3" style="margin-top:12px">
+    <div class="grid">
       <div>
-        <label>開始時刻（10分刻み）</label>
-        <select id="startTime"></select>
+        <label for="taskName">タスク名</label>
+        <input id="taskName" placeholder="例）基礎工事" />
       </div>
-      <div>
-        <label>終了時刻（10分刻み）</label>
-        <select id="endTime"></select>
-      </div>
-      <div>
-        <label>走行距離（自動計算）</label>
-        <input id="distance" type="number" step="0.1" placeholder="end - start を自動計算" disabled>
-      </div>
-    </div>
-
-    <div class="grid cols-2" style="margin-top:12px">
       <div class="grid cols-2">
         <div>
-          <label>メーター開始（km）</label>
-          <input id="odoStart" type="number" step="0.1" placeholder="例）12345.6">
+          <label for="taskStart">開始日</label>
+          <input type="date" id="taskStart" />
         </div>
         <div>
-          <label>メーター終了（km）</label>
-          <input id="odoEnd" type="number" step="0.1" placeholder="例）12367.2">
+          <label for="taskEnd">終了日</label>
+          <input type="date" id="taskEnd" />
         </div>
-      </div>
-      <div class="grid">
-        <label>アルコールチェック</label>
-        <div class="row">
-          <input id="alcoholBefore" type="checkbox"><span>運転前に実施</span>
-          <input id="alcoholAfter" type="checkbox" style="margin-left:16px"><span>運転後に実施</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="right" style="margin-top:14px">
-      <button class="btn secondary" id="clearForm">クリア</button>
-      <button class="btn" id="save">保存</button>
-    </div>
-  </section>
-
-  <!-- フィルタ & 集計 -->
-  <section class="card section">
-    <div class="totals">
-      <div class="row" style="gap:8px">
-        <label>表示する年月</label>
-        <input type="month" id="monthFilter">
       </div>
       <div>
-        <strong>月間合計距離：</strong>
-        <span id="monthlyTotal">0.0</span> km
+        <label for="taskNote">メモ</label>
+        <textarea id="taskNote" placeholder="例）資材搬入は朝8時"></textarea>
       </div>
-      <div class="right">
-        <button class="btn secondary" id="exportCsv">CSVエクスポート</button>
-        <button class="btn secondary" id="deleteMonth">この月を全削除</button>
+      <div class="row" style="justify-content:flex-end">
+        <button class="btn ghost" id="cancelEdit" style="display:none">編集をキャンセル</button>
+        <button class="btn" id="saveTask">保存</button>
       </div>
     </div>
   </section>
 
-  <!-- 一覧 -->
-  <section class="card section">
-    <div style="overflow:auto">
-      <table id="table">
-        <thead>
-          <tr>
-            <th>日付</th>
-            <th>曜日</th>
-            <th>開始</th>
-            <th>終了</th>
-            <th>メーター開始</th>
-            <th>メーター終了</th>
-            <th>距離</th>
-            <th>運転者</th>
-            <th>行き先</th>
-            <th>酒前</th>
-            <th>酒後</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+  <section class="card">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div class="badge">🗓️ 工程表示</div>
+        <div class="helper" id="rangeLabel"></div>
+      </div>
+      <div class="row">
+        <button class="btn secondary" id="exportBtn">CSV出力</button>
+        <button class="btn danger" id="resetBtn">全削除</button>
+      </div>
     </div>
+    <div class="schedule-wrapper" style="margin-top:12px">
+      <table class="schedule" id="scheduleTable" aria-label="工程表"></table>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <div class="badge">✅ タスク一覧</div>
+        <div class="helper">ドラッグ不要、タップで編集</div>
+      </div>
+      <div class="helper" id="taskCount"></div>
+    </div>
+    <div class="task-list" id="taskList" style="margin-top:12px"></div>
   </section>
 </main>
 
 <script>
-// === あなたのGAS URL（/exec） ===
-const API_BASE = 'https://script.google.com/macros/s/AKfycbyMxpKLVGJuL5m6e-2Pxe4Hq-10i634lwPQ8N2By3hgVvMwodo6Y9wroMM7Lb8ryRH3ng/exec';
+const state = {
+  range: 14,
+  tasks: [],
+  editId: null,
+};
 
-// ---- API helpers ----
-async function apiGet(params){
-  const url = API_BASE + '?' + new URLSearchParams(params).toString();
-  const res = await fetch(url, { method:'GET' });
-  if(!res.ok) throw new Error('GET ' + res.status);
-  return res.json();
-}
-async function apiPost(payload){
-  // プリフライト回避のため、ヘッダを付けず FormData で送る
-  const fd = new FormData();
-  fd.append('body', JSON.stringify(payload));
+const elements = {
+  startDate: document.getElementById('startDate'),
+  taskName: document.getElementById('taskName'),
+  taskStart: document.getElementById('taskStart'),
+  taskEnd: document.getElementById('taskEnd'),
+  taskNote: document.getElementById('taskNote'),
+  scheduleTable: document.getElementById('scheduleTable'),
+  rangeLabel: document.getElementById('rangeLabel'),
+  taskList: document.getElementById('taskList'),
+  taskCount: document.getElementById('taskCount'),
+  cancelEdit: document.getElementById('cancelEdit'),
+};
 
-  const res = await fetch(API_BASE, { method:'POST', body: fd });
-  if(!res.ok){ const t=await res.text().catch(()=> ''); throw new Error('POST '+res.status+' '+t); }
-  return res.json();
-}
+const pad = (n) => String(n).padStart(2, '0');
+const toDateStr = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseDate = (value) => value ? new Date(`${value}T00:00:00`) : null;
+const storageKey = 'scheduleTasksV1';
 
-// ---- Utils ----
-const jpWeek = ["日","月","火","水","木","金","土"];
-const pad = n => String(n).padStart(2,"0");
-const isNum = v => typeof v === "number" && !Number.isNaN(v);
-const toNumOrNull = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+const loadTasks = () => {
+  const raw = localStorage.getItem(storageKey);
+  state.tasks = raw ? JSON.parse(raw) : [];
+};
+const saveTasks = () => {
+  localStorage.setItem(storageKey, JSON.stringify(state.tasks));
+};
 
-function makeTimeOptions(){
-  const selStart = document.getElementById("startTime");
-  const selEnd = document.getElementById("endTime");
-  selStart.innerHTML = ""; selEnd.innerHTML = "";
-  for(let h=0; h<24; h++){
-    for(let m=0; m<60; m+=10){
-      const v = `${pad(h)}:${pad(m)}`;
-      selStart.appendChild(new Option(v, v));
-      selEnd.appendChild(new Option(v, v));
-    }
+const updateRangeLabel = () => {
+  const start = parseDate(elements.startDate.value);
+  if (!start) return;
+  const end = new Date(start);
+  end.setDate(end.getDate() + state.range - 1);
+  elements.rangeLabel.textContent = `${elements.startDate.value} 〜 ${toDateStr(end)}（${state.range}日間）`;
+};
+
+const renderTable = () => {
+  const start = parseDate(elements.startDate.value);
+  if (!start) return;
+  const days = Array.from({ length: state.range }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+  const todayStr = toDateStr(new Date());
+
+  const headerRow = `<tr><th>タスク</th>${days.map(d => `<th>${pad(d.getMonth()+1)}/${pad(d.getDate())}</th>`).join('')}</tr>`;
+
+  const rows = state.tasks.map(task => {
+    const startDate = parseDate(task.start);
+    const endDate = parseDate(task.end);
+    const cells = days.map(d => {
+      const dStr = toDateStr(d);
+      const isActive = startDate && endDate && d >= startDate && d <= endDate;
+      const isToday = dStr === todayStr;
+      const classes = [
+        'timeline-cell',
+        isActive ? 'active' : '',
+        isToday ? 'today' : ''
+      ].filter(Boolean).join(' ');
+      return `<td class="${classes}"></td>`;
+    }).join('');
+    return `<tr><td class="task-cell"><span class="task-pill">${task.name}</span></td>${cells}</tr>`;
+  }).join('');
+
+  elements.scheduleTable.innerHTML = headerRow + (rows || `<tr><td class="task-cell" colspan="${state.range + 1}">タスクがまだありません。</td></tr>`);
+  updateRangeLabel();
+};
+
+const renderTaskList = () => {
+  elements.taskList.innerHTML = '';
+  state.tasks.forEach(task => {
+    const item = document.createElement('div');
+    item.className = 'task-item';
+    item.innerHTML = `
+      <header>
+        <h3>${task.name}</h3>
+      </header>
+      <div class="task-meta">
+        <span>期間: ${task.start} 〜 ${task.end}</span>
+        <span>更新: ${task.updatedAt}</span>
+      </div>
+      <div>${task.note ? task.note : '<span class="helper">メモなし</span>'}</div>
+      <div class="task-actions">
+        <button class="btn secondary" data-action="edit">編集</button>
+        <button class="btn danger" data-action="delete">削除</button>
+      </div>
+    `;
+    item.querySelector('[data-action="edit"]').addEventListener('click', () => startEditTask(task.id));
+    item.querySelector('[data-action="delete"]').addEventListener('click', () => deleteTask(task.id));
+    elements.taskList.appendChild(item);
+  });
+  elements.taskCount.textContent = `${state.tasks.length} 件`;
+};
+
+const clearForm = () => {
+  elements.taskName.value = '';
+  elements.taskStart.value = '';
+  elements.taskEnd.value = '';
+  elements.taskNote.value = '';
+};
+
+const startEditTask = (id) => {
+  const task = state.tasks.find(t => t.id === id);
+  if (!task) return;
+  state.editId = id;
+  elements.taskName.value = task.name;
+  elements.taskStart.value = task.start;
+  elements.taskEnd.value = task.end;
+  elements.taskNote.value = task.note;
+  elements.cancelEdit.style.display = 'inline-flex';
+  elements.taskName.focus();
+};
+
+const finishEdit = () => {
+  state.editId = null;
+  elements.cancelEdit.style.display = 'none';
+  clearForm();
+};
+
+const deleteTask = (id) => {
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  saveTasks();
+  renderAll();
+};
+
+const renderAll = () => {
+  renderTable();
+  renderTaskList();
+};
+
+const validateTask = () => {
+  if (!elements.taskName.value.trim()) {
+    alert('タスク名を入力してください');
+    return false;
   }
-  selStart.value="09:00"; selEnd.value="18:00";
-}
-function getWeekdayStr(dateStr){
-  if(!dateStr) return "";
-  const d = new Date(dateStr + "T00:00:00");
-  if(Number.isNaN(d.getTime())) return "";
-  return jpWeek[d.getDay()];
-}
-function ymKey(dateStr){
-  const d = new Date(dateStr + "T00:00:00");
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-}
-function calcDistance(){
-  const s = toNumOrNull(document.getElementById("odoStart").value);
-  const e = toNumOrNull(document.getElementById("odoEnd").value);
-  const out = document.getElementById("distance");
-  if(isNum(s) && isNum(e) && e>=s) out.value=(e-s).toFixed(1);
-  else out.value="";
-}
+  if (!elements.taskStart.value || !elements.taskEnd.value) {
+    alert('開始日と終了日を入力してください');
+    return false;
+  }
+  const start = parseDate(elements.taskStart.value);
+  const end = parseDate(elements.taskEnd.value);
+  if (end < start) {
+    alert('終了日は開始日以降にしてください');
+    return false;
+  }
+  return true;
+};
 
-// ---- Server storage (GAS) ----
-async function loadMonth(month){
-  const j = await apiGet({ action:'list', month });
-  if(!j.ok) throw new Error(j.error||'list failed');
-  return Array.isArray(j.rows) ? j.rows : [];
-}
-async function saveRowToServer(row){
-  const j = await apiPost({ action:'save', row });
-  if(!j.ok) throw new Error(j.error||'save failed');
-}
-async function deleteMonthOnServer(month){
-  const j = await apiPost({ action:'deletemonth', month });
-  if(!j.ok) throw new Error(j.error||'delete failed');
-}
-async function fetchDestHistory(){
-  const j = await apiGet({ action:'destlist' });
-  if(!j.ok) throw new Error(j.error||'destlist failed');
-  return Array.isArray(j.list) ? j.list : [];
-}
-function renderDestListFrom(list){
-  const dl = document.getElementById("destList");
-  dl.innerHTML = "";
-  list.forEach(txt => dl.appendChild(new Option(txt, txt)));
-}
+const saveTask = () => {
+  if (!validateTask()) return;
+  const now = new Date();
+  const taskData = {
+    id: state.editId ?? crypto.randomUUID(),
+    name: elements.taskName.value.trim(),
+    start: elements.taskStart.value,
+    end: elements.taskEnd.value,
+    note: elements.taskNote.value.trim(),
+    updatedAt: `${pad(now.getMonth()+1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`
+  };
+  if (state.editId) {
+    state.tasks = state.tasks.map(task => task.id === state.editId ? taskData : task);
+    finishEdit();
+  } else {
+    state.tasks.unshift(taskData);
+    clearForm();
+  }
+  saveTasks();
+  renderAll();
+};
 
-// ---- Table render（サーバデータを日付→開始で並べ替え）----
-function safeFixed(value, digits=1){ return isNum(value) ? value.toFixed(digits) : ""; }
+const exportCSV = () => {
+  const header = ['タスク名','開始日','終了日','メモ'];
+  const rows = state.tasks.map(task => [
+    `"${task.name.replace(/"/g, '""')}"`,
+    task.start,
+    task.end,
+    `"${(task.note || '').replace(/"/g, '""')}"`
+  ].join(','));
+  const csv = [header.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'schedule.csv';
+  link.click();
+  URL.revokeObjectURL(link.href);
+};
 
-async function renderTable(){
-  const month = document.getElementById("monthFilter").value;
-  const tbody = document.querySelector("#table tbody");
-  tbody.innerHTML = "";
-  let total = 0;
+const resetAll = () => {
+  if (!confirm('すべてのタスクを削除します。よろしいですか？')) return;
+  state.tasks = [];
+  saveTasks();
+  renderAll();
+};
 
-  const rows = (await loadMonth(month))
-    .slice()
-    .sort((a,b)=>{
-      const da = new Date((a.date||"") + "T00:00:00").getTime();
-      const db = new Date((b.date||"") + "T00:00:00").getTime();
-      if(da !== db) return da - db;
-      return String(a.startTime||"").localeCompare(String(b.startTime||""));
-    });
-
-  rows.forEach((r) => {
-    const tr = document.createElement("tr");
-    const cells = [
-      r.date || "", r.weekday || "",
-      r.startTime || "", r.endTime || "",
-      safeFixed(r.odoStart), safeFixed(r.odoEnd), safeFixed(r.distance),
-      r.driver || "", r.destination || "",
-      r.alcoholBefore ? "✓" : "", r.alcoholAfter ? "✓" : ""
-    ];
-    cells.forEach(c=>{
-      const td=document.createElement("td"); td.textContent=(c ?? ""); tr.appendChild(td);
-    });
-    const tdAct = document.createElement("td");
-    const del = document.createElement("button");
-    del.textContent="削除"; del.className="btn secondary";
-    del.onclick = async () => {
-      if(!confirm(`${month} の全データを削除します。よろしいですか？`)) return;
-      await deleteMonthOnServer(month);
-      await renderTable();
-    };
-    tdAct.appendChild(del); tr.appendChild(tdAct);
-    tbody.appendChild(tr);
-    if(isNum(r.distance)) total += r.distance;
-  });
-  document.getElementById("monthlyTotal").textContent = total.toFixed(1);
-}
-
-// CSVエクスポート（サーバから読み直して生成）
-async function exportCSV(){
-  const m = document.getElementById("monthFilter").value;
-  const rows = (await loadMonth(m)).slice().sort((a,b)=>{
-    const da = new Date((a.date||"")+"T00:00:00").getTime();
-    const db = new Date((b.date||"")+"T00:00:00").getTime();
-    if(da!==db) return da-db;
-    return String(a.startTime||"").localeCompare(String(b.startTime||""));
-  });
-  const header = ["日付","曜日","開始","終了","メーター開始","メーター終了","距離(km)","運転者","行き先","酒前","酒後"];
-  const lines = [header.join(",")].concat(rows.map(r=>[
-    r.date||"", r.weekday||"", r.startTime||"", r.endTime||"",
-    isNum(r.odoStart)?r.odoStart:"", isNum(r.odoEnd)?r.odoEnd:"", isNum(r.distance)?r.distance:"",
-    `"${String(r.driver||"").replace(/"/g,'""')}"`,
-    `"${String(r.destination||"").replace(/"/g,'""')}"`,
-    r.alcoholBefore?1:0, r.alcoholAfter?1:0
-  ].join(",")));
-  const blob = new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `drivelog_${m}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-// ---- Init ----
-(function init(){
-  makeTimeOptions();
-
+const init = () => {
   const today = new Date();
-  const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-  document.getElementById("date").value = todayStr;
-  document.getElementById("weekday").textContent = `（${getWeekdayStr(todayStr)}）`;
-  document.getElementById("monthFilter").value = ymKey(todayStr);
+  elements.startDate.value = toDateStr(today);
+  elements.taskStart.value = toDateStr(today);
+  elements.taskEnd.value = toDateStr(today);
+  loadTasks();
+  renderAll();
+};
 
-  // Events
-  document.getElementById("date").addEventListener("change", e=>{
-    const d = e.target.value;
-    document.getElementById("weekday").textContent = `（${getWeekdayStr(d)}）`;
-    document.getElementById("monthFilter").value = ymKey(d);
+document.querySelectorAll('.segmented button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.segmented button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.range = Number(btn.dataset.range);
     renderTable();
   });
-  document.getElementById("odoStart").addEventListener("input", calcDistance);
-  document.getElementById("odoEnd").addEventListener("input", calcDistance);
+});
 
-  document.getElementById("save").addEventListener("click", async ()=>{
-    try{
-      const date = document.getElementById("date").value;
-      if(!date){ alert("日付を入力してください"); return; }
+elements.startDate.addEventListener('change', renderTable);
 
-      const odoStart = toNumOrNull(document.getElementById("odoStart").value);
-      const odoEnd   = toNumOrNull(document.getElementById("odoEnd").value);
-      if(isNum(odoStart) && isNum(odoEnd) && odoEnd < odoStart){
-        alert("メーター終了はメーター開始以上にしてください");
-        return;
-      }
+document.getElementById('todayBtn').addEventListener('click', () => {
+  elements.startDate.value = toDateStr(new Date());
+  renderTable();
+});
 
-      const distanceField = document.getElementById("distance").value;
-      const calc = (isNum(odoStart)&&isNum(odoEnd)) ? (odoEnd - odoStart) : null;
-      const distance = toNumOrNull(distanceField) ?? calc;
+document.getElementById('saveTask').addEventListener('click', saveTask);
 
-      const row = {
-        date,
-        weekday: getWeekdayStr(date),
-        startTime: document.getElementById("startTime").value || "",
-        endTime: document.getElementById("endTime").value || "",
-        odoStart: odoStart ?? null,
-        odoEnd:   odoEnd   ?? null,
-        distance: distance ?? null,
-        driver: (document.getElementById("driver").value || "").trim(),
-        destination: (document.getElementById("destination").value || "").trim(),
-        alcoholBefore: document.getElementById("alcoholBefore").checked,
-        alcoholAfter: document.getElementById("alcoholAfter").checked
-      };
+elements.cancelEdit.addEventListener('click', finishEdit);
 
-      await saveRowToServer(row);
-      alert("保存しました");
+document.getElementById('exportBtn').addEventListener('click', exportCSV);
 
-      const list = await fetchDestHistory();
-      renderDestListFrom(list);
+document.getElementById('resetBtn').addEventListener('click', resetAll);
 
-      await renderTable();
-    }catch(err){
-      console.error(err);
-      alert("保存中にエラー: " + err.message);
-    }
-  });
-
-  document.getElementById("clearForm").addEventListener("click", ()=>{
-    ["driver","destination","odoStart","odoEnd","distance"].forEach(id=>document.getElementById(id).value="");
-    document.getElementById("startTime").value="09:00";
-    document.getElementById("endTime").value="18:00";
-    document.getElementById("alcoholBefore").checked=false;
-    document.getElementById("alcoholAfter").checked=false;
-  });
-
-  document.getElementById("monthFilter").addEventListener("change", ()=>renderTable());
-  document.getElementById("exportCsv").addEventListener("click", ()=>exportCSV());
-  document.getElementById("deleteMonth").addEventListener("click", async ()=>{
-    const m = document.getElementById("monthFilter").value;
-    if(confirm(`${m} の全データを削除します。よろしいですか？`)){
-      await deleteMonthOnServer(m);
-      await renderTable();
-    }
-  });
-
-  (async ()=>{
-    try{
-      const list = await fetchDestHistory();
-      renderDestListFrom(list);
-    }catch(e){ console.warn('destlist failed', e); }
-    await renderTable();
-  })();
-})();
+init();
 </script>
 </body>
 </html>
