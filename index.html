@@ -1,386 +1,108 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>運転日誌（同期版）</title>
-<style>
-:root{--bg:#f7f7fb;--card:#fff;--text:#222;--muted:#666;--accent:#2f6feb;--border:#e5e7eb}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-header{padding:16px 20px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:2}
-header h1{margin:0;font-size:18px}
-main{max-width:980px;margin:20px auto;padding:0 16px;display:grid;gap:16px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
-.section{padding:16px}
-.grid{display:grid;gap:12px}
-.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-input,select,button{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
-input[type="checkbox"]{width:auto}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{background:var(--accent);color:#fff;border:none;cursor:pointer}
-.btn.secondary{background:#fff;color:#222;border:1px solid var(--border)}
-.right{display:flex;gap:10px;justify-content:flex-end}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
-th{background:#fafafe;color:#444;font-weight:600}
-.muted{color:var(--muted)}
-.totals{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-@media (max-width:720px){.grid.cols-2,.grid.cols-3{grid-template-columns:1fr}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>50代のDX｜無料LIVE予約</title>
+  <meta name="description" content="32年の現場経験をAIで資産に変える、50代向けDX無料LIVE講座のスマホLPです。" />
+  <link rel="preload" as="image" href="assets/mobile-lp/01-first-view.svg" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<header><h1>運転日誌</h1></header>
+  <a class="skip-link" href="#lp-content">本文へ移動</a>
 
-<main>
-  <!-- 入力フォーム -->
-  <section class="card section">
-    <div class="grid cols-3">
-      <div>
-        <label>日付（曜日は自動）</label>
-        <input type="date" id="date">
-        <div class="muted" id="weekday" aria-live="polite"></div>
-      </div>
-      <div>
-        <label>運転者名</label>
-        <input id="driver" placeholder="例）山田 太郎">
-      </div>
-      <div>
-        <label>行き先（直近5件を候補表示）</label>
-        <input id="destination" list="destList" placeholder="例）岡山営業所">
-        <datalist id="destList"></datalist>
-      </div>
-    </div>
+  <main id="lp-content" class="lp-shell" aria-label="50代のDX 無料LIVE予約ランディングページ">
+    <h1 class="sr-only">50代のDX。AIが俺の12年を資産に変えた無料LIVE講座</h1>
+    <p class="sr-only">
+      32年の現場監督が、現場経験・日誌・判断ノウハウをAIで整理し、売れる知識資産に変える方法を学べる無料LIVE予約ページです。
+    </p>
 
-    <div class="grid cols-3" style="margin-top:12px">
-      <div>
-        <label>開始時刻（10分刻み）</label>
-        <select id="startTime"></select>
-      </div>
-      <div>
-        <label>終了時刻（10分刻み）</label>
-        <select id="endTime"></select>
-      </div>
-      <div>
-        <label>走行距離（自動計算）</label>
-        <input id="distance" type="number" step="0.1" placeholder="end - start を自動計算" disabled>
-      </div>
-    </div>
+    <section class="lp-slice" aria-labelledby="section-first-view">
+      <h2 id="section-first-view" class="sr-only">ファーストビューと無料LIVE予約CTA</h2>
+      <img src="assets/mobile-lp/01-first-view.svg" alt="" width="750" height="1260" decoding="async" fetchpriority="high" />
+      <a class="hotspot hotspot-hero-cta" href="#reserve" data-modal-title="無料LIVE予約" data-modal-body="予約フォームは準備中です。公開時には、このボタンから無料LIVEの参加枠を確保できます。" aria-label="無料LIVEを予約する"></a>
+      <p class="sr-only">無料LIVE講座。経験をAIで売れる知識に変える90分。無料LIVEを予約する。</p>
+    </section>
 
-    <div class="grid cols-2" style="margin-top:12px">
-      <div class="grid cols-2">
-        <div>
-          <label>メーター開始（km）</label>
-          <input id="odoStart" type="number" step="0.1" placeholder="例）12345.6">
-        </div>
-        <div>
-          <label>メーター終了（km）</label>
-          <input id="odoEnd" type="number" step="0.1" placeholder="例）12367.2">
-        </div>
-      </div>
-      <div class="grid">
-        <label>アルコールチェック</label>
-        <div class="row">
-          <input id="alcoholBefore" type="checkbox"><span>運転前に実施</span>
-          <input id="alcoholAfter" type="checkbox" style="margin-left:16px"><span>運転後に実施</span>
-        </div>
-      </div>
-    </div>
+    <section class="lp-slice" aria-labelledby="section-video">
+      <h2 id="section-video" class="sr-only">証明、実績、動画、信頼</h2>
+      <img src="assets/mobile-lp/02-proof-video-trust.svg" alt="" width="750" height="1120" loading="lazy" decoding="async" />
+      <button class="hotspot hotspot-video" type="button" data-modal-title="紹介動画" data-modal-body="動画は準備中です。公開時には、ここで無料LIVEの内容と参加メリットを確認できます。" aria-label="紹介動画を再生する"></button>
+      <p class="sr-only">なぜ今、現場経験がAI時代の武器になるのか。12年分の判断、現場言語の強み、実績の見せ方を紹介します。</p>
+    </section>
 
-    <div class="right" style="margin-top:14px">
-      <button class="btn secondary" id="clearForm">クリア</button>
-      <button class="btn" id="save">保存</button>
-    </div>
-  </section>
+    <section class="lp-slice" aria-labelledby="section-benefits">
+      <h2 id="section-benefits" class="sr-only">このLIVEで手に入るもの</h2>
+      <img src="assets/mobile-lp/03-benefits.svg" alt="" width="750" height="1120" loading="lazy" decoding="async" />
+      <a class="hotspot hotspot-benefit-cta" href="#reserve" data-modal-title="席だけ先に確保" data-modal-body="予約URLは未確定です。公開後は、このボタンから無料LIVEの席を先に確保できます。" aria-label="無料LIVEの席だけ先に確保する"></a>
+      <ul class="sr-only">
+        <li>経験を棚卸しする質問リスト</li>
+        <li>AIに渡す現場メモの作り方</li>
+        <li>商品化できるテーマの見つけ方</li>
+        <li>顔出しなしでも信頼を作るLP骨子</li>
+        <li>今日から試せる無料ツール導線</li>
+      </ul>
+    </section>
 
-  <!-- フィルタ & 集計 -->
-  <section class="card section">
-    <div class="totals">
-      <div class="row" style="gap:8px">
-        <label>表示する年月</label>
-        <input type="month" id="monthFilter">
-      </div>
-      <div>
-        <strong>月間合計距離：</strong>
-        <span id="monthlyTotal">0.0</span> km
-      </div>
-      <div class="right">
-        <button class="btn secondary" id="exportCsv">CSVエクスポート</button>
-        <button class="btn secondary" id="deleteMonth">この月を全削除</button>
-      </div>
-    </div>
-  </section>
+    <section class="lp-slice" aria-labelledby="section-recommendation">
+      <h2 id="section-recommendation" class="sr-only">こんな方におすすめです</h2>
+      <img src="assets/mobile-lp/04-recommendation.svg" alt="" width="750" height="1080" loading="lazy" decoding="async" />
+      <ul class="sr-only">
+        <li>長年の現場経験を次の収入に変えたい方</li>
+        <li>AIに興味はあるが何から始めるか迷う方</li>
+        <li>若手に任せきりのDXに不安がある方</li>
+        <li>日誌、資料、写真が眠ったままになっている方</li>
+        <li>自分の言葉で発信する型がほしい方</li>
+      </ul>
+    </section>
 
-  <!-- 一覧 -->
-  <section class="card section">
-    <div style="overflow:auto">
-      <table id="table">
-        <thead>
-          <tr>
-            <th>日付</th>
-            <th>曜日</th>
-            <th>開始</th>
-            <th>終了</th>
-            <th>メーター開始</th>
-            <th>メーター終了</th>
-            <th>距離</th>
-            <th>運転者</th>
-            <th>行き先</th>
-            <th>酒前</th>
-            <th>酒後</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </section>
-</main>
+    <section class="lp-slice" aria-labelledby="section-workflow">
+      <h2 id="section-workflow" class="sr-only">当日の流れ</h2>
+      <img src="assets/mobile-lp/05-workflow.svg" alt="" width="750" height="1190" loading="lazy" decoding="async" />
+      <a class="hotspot hotspot-workflow-cta" href="#reserve" data-modal-title="LIVEの席を確保" data-modal-body="予約導線は準備中です。公開時には、ここから無料LIVEの参加枠を確保できます。" aria-label="LIVEの席を確保する"></a>
+      <ol class="sr-only">
+        <li>現場経験を資産として言語化</li>
+        <li>AIに渡す素材とNG入力を整理</li>
+        <li>売れるテーマを3つに絞る</li>
+        <li>LP、動画、LINE導線の設計</li>
+        <li>7日間の実践プランを作成</li>
+      </ol>
+    </section>
 
-<script>
-// === あなたのGAS URL（/exec） ===
-const API_BASE = 'https://script.google.com/macros/s/AKfycbyMxpKLVGJuL5m6e-2Pxe4Hq-10i634lwPQ8N2By3hgVvMwodo6Y9wroMM7Lb8ryRH3ng/exec';
+    <section class="lp-slice" aria-labelledby="section-speaker">
+      <h2 id="section-speaker" class="sr-only">登壇者プロフィール</h2>
+      <img src="assets/mobile-lp/06-speaker-profile.svg" alt="" width="750" height="1180" loading="lazy" decoding="async" />
+      <button class="hotspot hotspot-profile" type="button" data-modal-title="登壇者プロフィール" data-modal-body="プロフィール詳細ページは準備中です。登壇者情報や実績リンクが確定したら、このエリアから遷移できます。" aria-label="登壇者プロフィールの詳細を見る"></button>
+      <p class="sr-only">佐藤誠。32年の現場監督、DX研修講師。建設、製造の現場経験をAIで整理し、若手育成と知識の商品化に転用する実践型プログラムを提供します。</p>
+    </section>
 
-// ---- API helpers ----
-async function apiGet(params){
-  const url = API_BASE + '?' + new URLSearchParams(params).toString();
-  const res = await fetch(url, { method:'GET' });
-  if(!res.ok) throw new Error('GET ' + res.status);
-  return res.json();
-}
-async function apiPost(payload){
-  // プリフライト回避のため、ヘッダを付けず FormData で送る
-  const fd = new FormData();
-  fd.append('body', JSON.stringify(payload));
+    <section id="reserve" class="lp-slice" aria-labelledby="section-final-cta">
+      <h2 id="section-final-cta" class="sr-only">最終CTAと無料LIVE予約フォーム</h2>
+      <img src="assets/mobile-lp/07-final-cta-form.svg" alt="" width="750" height="1220" loading="lazy" decoding="async" />
+      <button class="hotspot hotspot-form-name" type="button" data-modal-title="予約フォーム" data-modal-body="フォーム連携は準備中です。実装時には、お名前・メールアドレス・参加希望日を入力できるフォームに接続します。" aria-label="予約フォームのお名前入力欄"></button>
+      <button class="hotspot hotspot-form-email" type="button" data-modal-title="予約フォーム" data-modal-body="フォーム連携は準備中です。実装時には、お名前・メールアドレス・参加希望日を入力できるフォームに接続します。" aria-label="予約フォームのメールアドレス入力欄"></button>
+      <button class="hotspot hotspot-form-date" type="button" data-modal-title="予約フォーム" data-modal-body="フォーム連携は準備中です。実装時には、お名前・メールアドレス・参加希望日を入力できるフォームに接続します。" aria-label="予約フォームの参加希望日入力欄"></button>
+      <a class="hotspot hotspot-final-cta" href="#reserve" data-modal-title="無料で参加する" data-modal-body="無料LIVE予約URLは未確定です。公開時には、このボタンから参加登録を完了できます。" aria-label="無料LIVEに無料で参加する"></a>
+      <button class="hotspot hotspot-footer-links" type="button" data-modal-title="各種リンク" data-modal-body="プライバシーポリシーと特商法リンクは準備中です。URL確定後に正式リンクへ差し替えます。" aria-label="プライバシーポリシーと特商法リンクを見る"></button>
+      <p class="sr-only">AIを味方につけて、あなたの12年を次の資産に変えよう。無料LIVE予約フォーム。登録後、視聴URLをメールで送ります。</p>
+    </section>
+  </main>
 
-  const res = await fetch(API_BASE, { method:'POST', body: fd });
-  if(!res.ok){ const t=await res.text().catch(()=> ''); throw new Error('POST '+res.status+' '+t); }
-  return res.json();
-}
+  <a class="fixed-cta" href="#reserve" data-modal-title="無料LIVE予約" data-modal-body="予約URLは未確定です。公開時には、この固定ボタンから無料LIVEに申し込めます。" aria-label="画面下固定ボタンから無料LIVEを予約する">
+    <span>無料LIVEを予約する</span>
+  </a>
 
-// ---- Utils ----
-const jpWeek = ["日","月","火","水","木","金","土"];
-const pad = n => String(n).padStart(2,"0");
-const isNum = v => typeof v === "number" && !Number.isNaN(v);
-const toNumOrNull = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+  <div class="modal" id="modal" hidden>
+    <div class="modal__backdrop" data-close-modal></div>
+    <section class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-body" tabindex="-1">
+      <button class="modal__close" type="button" data-close-modal aria-label="モーダルを閉じる">×</button>
+      <p class="modal__eyebrow">Coming Soon</p>
+      <h2 id="modal-title">準備中です</h2>
+      <p id="modal-body">リンク先は準備中です。</p>
+      <button class="modal__primary" type="button" data-close-modal>閉じる</button>
+    </section>
+  </div>
 
-function makeTimeOptions(){
-  const selStart = document.getElementById("startTime");
-  const selEnd = document.getElementById("endTime");
-  selStart.innerHTML = ""; selEnd.innerHTML = "";
-  for(let h=0; h<24; h++){
-    for(let m=0; m<60; m+=10){
-      const v = `${pad(h)}:${pad(m)}`;
-      selStart.appendChild(new Option(v, v));
-      selEnd.appendChild(new Option(v, v));
-    }
-  }
-  selStart.value="09:00"; selEnd.value="18:00";
-}
-function getWeekdayStr(dateStr){
-  if(!dateStr) return "";
-  const d = new Date(dateStr + "T00:00:00");
-  if(Number.isNaN(d.getTime())) return "";
-  return jpWeek[d.getDay()];
-}
-function ymKey(dateStr){
-  const d = new Date(dateStr + "T00:00:00");
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-}
-function calcDistance(){
-  const s = toNumOrNull(document.getElementById("odoStart").value);
-  const e = toNumOrNull(document.getElementById("odoEnd").value);
-  const out = document.getElementById("distance");
-  if(isNum(s) && isNum(e) && e>=s) out.value=(e-s).toFixed(1);
-  else out.value="";
-}
-
-// ---- Server storage (GAS) ----
-async function loadMonth(month){
-  const j = await apiGet({ action:'list', month });
-  if(!j.ok) throw new Error(j.error||'list failed');
-  return Array.isArray(j.rows) ? j.rows : [];
-}
-async function saveRowToServer(row){
-  const j = await apiPost({ action:'save', row });
-  if(!j.ok) throw new Error(j.error||'save failed');
-}
-async function deleteMonthOnServer(month){
-  const j = await apiPost({ action:'deletemonth', month });
-  if(!j.ok) throw new Error(j.error||'delete failed');
-}
-async function fetchDestHistory(){
-  const j = await apiGet({ action:'destlist' });
-  if(!j.ok) throw new Error(j.error||'destlist failed');
-  return Array.isArray(j.list) ? j.list : [];
-}
-function renderDestListFrom(list){
-  const dl = document.getElementById("destList");
-  dl.innerHTML = "";
-  list.forEach(txt => dl.appendChild(new Option(txt, txt)));
-}
-
-// ---- Table render（サーバデータを日付→開始で並べ替え）----
-function safeFixed(value, digits=1){ return isNum(value) ? value.toFixed(digits) : ""; }
-
-async function renderTable(){
-  const month = document.getElementById("monthFilter").value;
-  const tbody = document.querySelector("#table tbody");
-  tbody.innerHTML = "";
-  let total = 0;
-
-  const rows = (await loadMonth(month))
-    .slice()
-    .sort((a,b)=>{
-      const da = new Date((a.date||"") + "T00:00:00").getTime();
-      const db = new Date((b.date||"") + "T00:00:00").getTime();
-      if(da !== db) return da - db;
-      return String(a.startTime||"").localeCompare(String(b.startTime||""));
-    });
-
-  rows.forEach((r) => {
-    const tr = document.createElement("tr");
-    const cells = [
-      r.date || "", r.weekday || "",
-      r.startTime || "", r.endTime || "",
-      safeFixed(r.odoStart), safeFixed(r.odoEnd), safeFixed(r.distance),
-      r.driver || "", r.destination || "",
-      r.alcoholBefore ? "✓" : "", r.alcoholAfter ? "✓" : ""
-    ];
-    cells.forEach(c=>{
-      const td=document.createElement("td"); td.textContent=(c ?? ""); tr.appendChild(td);
-    });
-    const tdAct = document.createElement("td");
-    const del = document.createElement("button");
-    del.textContent="削除"; del.className="btn secondary";
-    del.onclick = async () => {
-      if(!confirm(`${month} の全データを削除します。よろしいですか？`)) return;
-      await deleteMonthOnServer(month);
-      await renderTable();
-    };
-    tdAct.appendChild(del); tr.appendChild(tdAct);
-    tbody.appendChild(tr);
-    if(isNum(r.distance)) total += r.distance;
-  });
-  document.getElementById("monthlyTotal").textContent = total.toFixed(1);
-}
-
-// CSVエクスポート（サーバから読み直して生成）
-async function exportCSV(){
-  const m = document.getElementById("monthFilter").value;
-  const rows = (await loadMonth(m)).slice().sort((a,b)=>{
-    const da = new Date((a.date||"")+"T00:00:00").getTime();
-    const db = new Date((b.date||"")+"T00:00:00").getTime();
-    if(da!==db) return da-db;
-    return String(a.startTime||"").localeCompare(String(b.startTime||""));
-  });
-  const header = ["日付","曜日","開始","終了","メーター開始","メーター終了","距離(km)","運転者","行き先","酒前","酒後"];
-  const lines = [header.join(",")].concat(rows.map(r=>[
-    r.date||"", r.weekday||"", r.startTime||"", r.endTime||"",
-    isNum(r.odoStart)?r.odoStart:"", isNum(r.odoEnd)?r.odoEnd:"", isNum(r.distance)?r.distance:"",
-    `"${String(r.driver||"").replace(/"/g,'""')}"`,
-    `"${String(r.destination||"").replace(/"/g,'""')}"`,
-    r.alcoholBefore?1:0, r.alcoholAfter?1:0
-  ].join(",")));
-  const blob = new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `drivelog_${m}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-// ---- Init ----
-(function init(){
-  makeTimeOptions();
-
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-  document.getElementById("date").value = todayStr;
-  document.getElementById("weekday").textContent = `（${getWeekdayStr(todayStr)}）`;
-  document.getElementById("monthFilter").value = ymKey(todayStr);
-
-  // Events
-  document.getElementById("date").addEventListener("change", e=>{
-    const d = e.target.value;
-    document.getElementById("weekday").textContent = `（${getWeekdayStr(d)}）`;
-    document.getElementById("monthFilter").value = ymKey(d);
-    renderTable();
-  });
-  document.getElementById("odoStart").addEventListener("input", calcDistance);
-  document.getElementById("odoEnd").addEventListener("input", calcDistance);
-
-  document.getElementById("save").addEventListener("click", async ()=>{
-    try{
-      const date = document.getElementById("date").value;
-      if(!date){ alert("日付を入力してください"); return; }
-
-      const odoStart = toNumOrNull(document.getElementById("odoStart").value);
-      const odoEnd   = toNumOrNull(document.getElementById("odoEnd").value);
-      if(isNum(odoStart) && isNum(odoEnd) && odoEnd < odoStart){
-        alert("メーター終了はメーター開始以上にしてください");
-        return;
-      }
-
-      const distanceField = document.getElementById("distance").value;
-      const calc = (isNum(odoStart)&&isNum(odoEnd)) ? (odoEnd - odoStart) : null;
-      const distance = toNumOrNull(distanceField) ?? calc;
-
-      const row = {
-        date,
-        weekday: getWeekdayStr(date),
-        startTime: document.getElementById("startTime").value || "",
-        endTime: document.getElementById("endTime").value || "",
-        odoStart: odoStart ?? null,
-        odoEnd:   odoEnd   ?? null,
-        distance: distance ?? null,
-        driver: (document.getElementById("driver").value || "").trim(),
-        destination: (document.getElementById("destination").value || "").trim(),
-        alcoholBefore: document.getElementById("alcoholBefore").checked,
-        alcoholAfter: document.getElementById("alcoholAfter").checked
-      };
-
-      await saveRowToServer(row);
-      alert("保存しました");
-
-      const list = await fetchDestHistory();
-      renderDestListFrom(list);
-
-      await renderTable();
-    }catch(err){
-      console.error(err);
-      alert("保存中にエラー: " + err.message);
-    }
-  });
-
-  document.getElementById("clearForm").addEventListener("click", ()=>{
-    ["driver","destination","odoStart","odoEnd","distance"].forEach(id=>document.getElementById(id).value="");
-    document.getElementById("startTime").value="09:00";
-    document.getElementById("endTime").value="18:00";
-    document.getElementById("alcoholBefore").checked=false;
-    document.getElementById("alcoholAfter").checked=false;
-  });
-
-  document.getElementById("monthFilter").addEventListener("change", ()=>renderTable());
-  document.getElementById("exportCsv").addEventListener("click", ()=>exportCSV());
-  document.getElementById("deleteMonth").addEventListener("click", async ()=>{
-    const m = document.getElementById("monthFilter").value;
-    if(confirm(`${m} の全データを削除します。よろしいですか？`)){
-      await deleteMonthOnServer(m);
-      await renderTable();
-    }
-  });
-
-  (async ()=>{
-    try{
-      const list = await fetchDestHistory();
-      renderDestListFrom(list);
-    }catch(e){ console.warn('destlist failed', e); }
-    await renderTable();
-  })();
-})();
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
