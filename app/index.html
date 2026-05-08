@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#1f4f8f" />
+  <title>スマホ工程表 - ガントチャート</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-title">
+      <h1>スマホ工程表</h1>
+      <p>オフライン対応ガントチャート</p>
+    </div>
+    <button id="addTaskTop" class="btn primary">＋ 追加</button>
+  </header>
+
+  <main>
+    <section class="toolbar">
+      <div class="search-field">
+        <input id="searchInput" type="search" placeholder="工程名・担当・メモを検索" />
+      </div>
+      <div class="toolbar-row">
+        <select id="filterAssignee">
+          <option value="">担当（すべて）</option>
+        </select>
+        <select id="filterStatus">
+          <option value="">ステータス（すべて）</option>
+          <option value="未着手">未着手</option>
+          <option value="進行中">進行中</option>
+          <option value="完了">完了</option>
+        </select>
+        <select id="sortSelect">
+          <option value="start">開始日順</option>
+          <option value="assignee">担当順</option>
+          <option value="manual">登録順</option>
+        </select>
+      </div>
+      <div class="toolbar-row">
+        <button id="viewCards" class="btn ghost active">カード</button>
+        <button id="viewTable" class="btn ghost">テーブル</button>
+        <button id="viewGantt" class="btn ghost">ガント</button>
+        <div class="scale-toggle">
+          <button id="scaleWeek" class="btn ghost active">週</button>
+          <button id="scaleMonth" class="btn ghost">月</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="cardsSection" class="content-section"></section>
+    <section id="tableSection" class="content-section hidden"></section>
+    <section id="ganttSection" class="content-section hidden">
+      <div class="gantt-wrapper">
+        <div id="ganttHeader" class="gantt-header"></div>
+        <div id="ganttBody" class="gantt-body"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button id="navAdd" class="btn primary">＋ 新規</button>
+    <button id="navExport" class="btn">CSV出力</button>
+    <button id="navImport" class="btn">CSV取込</button>
+    <button id="navBackup" class="btn">バックアップ</button>
+    <button id="navReset" class="btn danger">リセット</button>
+  </nav>
+
+  <dialog id="taskModal" class="modal">
+    <form id="taskForm" method="dialog">
+      <h2 id="modalTitle">工程を追加</h2>
+      <div class="form-grid">
+        <label>工程名
+          <input name="title" type="text" required maxlength="60" />
+        </label>
+        <label>担当
+          <input name="assignee" type="text" required maxlength="40" />
+        </label>
+        <label>開始日
+          <input name="start" type="date" required />
+        </label>
+        <label>終了日
+          <input name="end" type="date" required />
+        </label>
+        <label>進捗
+          <input name="progress" type="range" min="0" max="100" step="5" />
+          <span id="progressValue" class="range-value">0%</span>
+        </label>
+        <label>ステータス
+          <select name="status" required>
+            <option value="未着手">未着手</option>
+            <option value="進行中">進行中</option>
+            <option value="完了">完了</option>
+          </select>
+        </label>
+        <label>色
+          <input name="color" type="color" />
+        </label>
+        <label class="full">メモ
+          <textarea name="memo" rows="3" maxlength="200"></textarea>
+        </label>
+      </div>
+      <p id="validationMessage" class="validation"></p>
+      <div class="modal-actions">
+        <button type="button" id="deleteTask" class="btn danger hidden">削除</button>
+        <button type="submit" class="btn primary">保存</button>
+        <button type="button" id="closeModal" class="btn">閉じる</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="importModal" class="modal">
+    <form id="importForm" method="dialog">
+      <h2>CSVインポート</h2>
+      <p>同じ形式のCSVを読み込みます。プレビュー後に上書き／追加を選択してください。</p>
+      <input id="csvFile" type="file" accept=".csv" />
+      <div id="csvPreview" class="preview"></div>
+      <div class="radio-group">
+        <label><input type="radio" name="importMode" value="overwrite" checked />上書き</label>
+        <label><input type="radio" name="importMode" value="append" />追加</label>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn primary">取り込み</button>
+        <button type="button" id="closeImport" class="btn">閉じる</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="backupModal" class="modal">
+    <form id="backupForm" method="dialog">
+      <h2>バックアップ/復元</h2>
+      <div class="backup-actions">
+        <button type="button" id="downloadBackup" class="btn primary">JSONダウンロード</button>
+        <input id="jsonFile" type="file" accept=".json" />
+      </div>
+      <div id="jsonPreview" class="preview"></div>
+      <div class="radio-group">
+        <label><input type="radio" name="backupMode" value="overwrite" checked />上書き</label>
+        <label><input type="radio" name="backupMode" value="append" />追加</label>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn primary">復元</button>
+        <button type="button" id="closeBackup" class="btn">閉じる</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="cardTemplate">
+    <article class="task-card">
+      <header>
+        <div class="card-title"></div>
+        <span class="status"></span>
+      </header>
+      <div class="meta"></div>
+      <div class="progress-bar"><span></span></div>
+      <p class="memo"></p>
+      <button class="btn small">編集</button>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
