@@ -1,386 +1,1405 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>運転日誌（同期版）</title>
-<style>
-:root{--bg:#f7f7fb;--card:#fff;--text:#222;--muted:#666;--accent:#2f6feb;--border:#e5e7eb}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-header{padding:16px 20px;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:0;z-index:2}
-header h1{margin:0;font-size:18px}
-main{max-width:980px;margin:20px auto;padding:0 16px;display:grid;gap:16px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
-.section{padding:16px}
-.grid{display:grid;gap:12px}
-.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
-input,select,button{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:14px}
-input[type="checkbox"]{width:auto}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.btn{background:var(--accent);color:#fff;border:none;cursor:pointer}
-.btn.secondary{background:#fff;color:#222;border:1px solid var(--border)}
-.right{display:flex;gap:10px;justify-content:flex-end}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
-th{background:#fafafe;color:#444;font-weight:600}
-.muted{color:var(--muted)}
-.totals{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-@media (max-width:720px){.grid.cols-2,.grid.cols-3{grid-template-columns:1fr}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>スマホ入力対応 工程表</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --border: #dbe1f1;
+      --text: #1f2933;
+      --muted: #516177;
+      --accent: #2563eb;
+      --accent-soft: rgba(37, 99, 235, 0.16);
+      --danger: #e11d48;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    header .inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 16px;
+      display: flex;
+      gap: 16px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    main {
+      max-width: 1080px;
+      margin: 16px auto 48px;
+      padding: 0 16px;
+      display: grid;
+      gap: 16px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+    }
+    .card > header,
+    .card > .section-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card > .section-header h2 {
+      font-size: 16px;
+      margin: 0;
+    }
+    .card-body {
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 6px;
+    }
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      background: #fff;
+      color: var(--text);
+    }
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 10px 16px;
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    }
+    button.secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    button.danger {
+      background: var(--danger);
+      color: #fff;
+    }
+    button:active {
+      transform: scale(0.97);
+    }
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .controls,
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .controls > * {
+      flex: 1 1 160px;
+    }
+    .toolbar button {
+      flex: 1 1 auto;
+    }
+    .timeline-wrapper {
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: #fff;
+      position: relative;
+    }
+    .timeline-content {
+      min-width: 280px;
+      position: relative;
+      --day-width: 44px;
+    }
+    .timeline-header,
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      position: relative;
+    }
+    .timeline-header {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      z-index: 2;
+    }
+    .timeline-label,
+    .timeline-day-strip {
+      position: relative;
+    }
+    .timeline-label {
+      padding: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .timeline-day-strip {
+      display: flex;
+      border-left: 1px solid var(--border);
+    }
+    .day-cell {
+      position: relative;
+      flex: 0 0 var(--day-width);
+      height: 52px;
+      border-left: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .day-cell.weekend {
+      background: rgba(94, 106, 133, 0.08);
+    }
+    .day-cell.today {
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--accent);
+    }
+    .timeline-row .timeline-label {
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0));
+      position: sticky;
+      left: 0;
+      z-index: 1;
+    }
+    .timeline-row .timeline-day-strip {
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      height: 60px;
+    }
+    .timeline-row:last-child .timeline-day-strip,
+    .timeline-row:last-child .timeline-label {
+      border-bottom: none;
+    }
+    .timeline-day-strip .day-cell {
+      height: 60px;
+      border-left: 1px solid rgba(226, 232, 240, 0.6);
+    }
+    .timeline-day-strip::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .today-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--accent);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .task-bar {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 18px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: grab;
+      touch-action: pan-y;
+    }
+    .task-bar.dashed {
+      border-style: dashed;
+      background: rgba(37, 99, 235, 0.06);
+    }
+    .task-bar::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -12px;
+      transform: translateY(-50%);
+      border-left: 12px solid currentColor;
+      border-top: 9px solid transparent;
+      border-bottom: 9px solid transparent;
+      opacity: 0.7;
+    }
+    .task-bar.dashed::after {
+      border-left-style: dashed;
+      border-left-color: rgba(37, 99, 235, 0.9);
+    }
+    .task-bar[data-mode="read-only"] {
+      cursor: default;
+    }
+    .handle {
+      position: absolute;
+      top: 0;
+      width: 16px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 2;
+    }
+    .handle.start { left: -4px; }
+    .handle.end { right: -16px; }
+    .handle.move {
+      inset: 0;
+      cursor: grab;
+      z-index: 1;
+    }
+    .task-meta {
+      font-size: 11px;
+      color: var(--muted);
+      display: block;
+    }
+    .list-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .list-table th,
+    .list-table td {
+      padding: 10px 6px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    .list-table tbody tr {
+      cursor: pointer;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--accent);
+      margin-left: 6px;
+    }
+    .empty-state {
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .public-only {
+      display: none;
+    }
+    .view-toggle {
+      display: inline-flex;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.8);
+      overflow: hidden;
+    }
+    .view-toggle button {
+      border-radius: 0;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 18px;
+      font-weight: 600;
+    }
+    .view-toggle button.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: none;
+    }
+    .field-grid {
+      display: grid;
+      gap: 12px;
+    }
+    @media (min-width: 720px) {
+      .field-grid.cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .field-grid.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 719px) {
+      .timeline-header,
+      .timeline-row {
+        grid-template-columns: 160px 1fr;
+      }
+      .timeline-content {
+        --day-width: 52px;
+      }
+    }
+  </style>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/shim.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-<header><h1>運転日誌</h1></header>
-
-<main>
-  <!-- 入力フォーム -->
-  <section class="card section">
-    <div class="grid cols-3">
-      <div>
-        <label>日付（曜日は自動）</label>
-        <input type="date" id="date">
-        <div class="muted" id="weekday" aria-live="polite"></div>
-      </div>
-      <div>
-        <label>運転者名</label>
-        <input id="driver" placeholder="例）山田 太郎">
-      </div>
-      <div>
-        <label>行き先（直近5件を候補表示）</label>
-        <input id="destination" list="destList" placeholder="例）岡山営業所">
-        <datalist id="destList"></datalist>
-      </div>
-    </div>
-
-    <div class="grid cols-3" style="margin-top:12px">
-      <div>
-        <label>開始時刻（10分刻み）</label>
-        <select id="startTime"></select>
-      </div>
-      <div>
-        <label>終了時刻（10分刻み）</label>
-        <select id="endTime"></select>
-      </div>
-      <div>
-        <label>走行距離（自動計算）</label>
-        <input id="distance" type="number" step="0.1" placeholder="end - start を自動計算" disabled>
-      </div>
-    </div>
-
-    <div class="grid cols-2" style="margin-top:12px">
-      <div class="grid cols-2">
-        <div>
-          <label>メーター開始（km）</label>
-          <input id="odoStart" type="number" step="0.1" placeholder="例）12345.6">
+  <header>
+    <div class="inner">
+      <h1>スマホ入力対応 工程表</h1>
+      <div class="toolbar">
+        <div class="view-toggle" role="group" aria-label="ビュー切替">
+          <button type="button" id="adminViewBtn" class="active">管理ビュー</button>
+          <button type="button" id="publicViewBtn">公開ビュー</button>
         </div>
-        <div>
-          <label>メーター終了（km）</label>
-          <input id="odoEnd" type="number" step="0.1" placeholder="例）12367.2">
+        <button type="button" class="secondary" id="copyPublicLink">公開URLをコピー</button>
+        <button type="button" class="secondary" id="downloadExcel">Excelダウンロード</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section class="card">
+      <header class="section-header">
+        <h2>タイムライン</h2>
+        <div class="controls">
+          <label>
+            <span class="muted">表示期間</span>
+            <select id="rangeSelect">
+              <option value="2w">2週間</option>
+              <option value="1m">1ヶ月</option>
+              <option value="3m">3ヶ月</option>
+            </select>
+          </label>
+          <label>
+            <span class="muted">ズーム</span>
+            <select id="zoomSelect">
+              <option value="1">100%</option>
+              <option value="2">200%</option>
+            </select>
+          </label>
+          <label>
+            <span class="muted">基準日</span>
+            <input type="date" id="anchorDate" />
+          </label>
+          <div class="toolbar" style="flex:1 1 100%;justify-content:flex-end;">
+            <button type="button" class="secondary" id="prevRange">◀︎ 前へ</button>
+            <button type="button" class="secondary" id="todayBtn">今日</button>
+            <button type="button" class="secondary" id="nextRange">次へ ▶︎</button>
+          </div>
         </div>
+      </header>
+      <div class="timeline-wrapper">
+        <div class="timeline-content" id="timeline"></div>
       </div>
-      <div class="grid">
-        <label>アルコールチェック</label>
-        <div class="row">
-          <input id="alcoholBefore" type="checkbox"><span>運転前に実施</span>
-          <input id="alcoholAfter" type="checkbox" style="margin-left:16px"><span>運転後に実施</span>
-        </div>
-      </div>
-    </div>
+      <div class="muted" style="padding:12px 20px 20px;">バーをドラッグして開始・終了日を調整できます（管理ビューのみ）。</div>
+    </section>
 
-    <div class="right" style="margin-top:14px">
-      <button class="btn secondary" id="clearForm">クリア</button>
-      <button class="btn" id="save">保存</button>
-    </div>
-  </section>
+    <section class="card admin-only" id="taskEditor">
+      <header class="section-header">
+        <h2>工程入力</h2>
+      </header>
+      <div class="card-body">
+        <form id="taskForm" autocomplete="off">
+          <input type="hidden" id="taskId" />
+          <div class="field-grid cols-2">
+            <div>
+              <label for="taskName">工程名</label>
+              <input id="taskName" list="taskNameList" required />
+              <datalist id="taskNameList"></datalist>
+            </div>
+            <div>
+              <label for="owner">担当者</label>
+              <input id="owner" list="ownerList" />
+              <datalist id="ownerList"></datalist>
+            </div>
+          </div>
+          <div class="field-grid cols-3">
+            <div>
+              <label for="category">カテゴリ</label>
+              <input id="category" list="categoryList" />
+              <datalist id="categoryList"></datalist>
+            </div>
+            <div>
+              <label for="lineStyle">線種</label>
+              <select id="lineStyle">
+                <option value="solid">実線（実績）</option>
+                <option value="dashed">破線（予定）</option>
+              </select>
+            </div>
+            <div>
+              <label for="dependency">依存先</label>
+              <select id="dependency">
+                <option value="">なし</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-grid cols-3">
+            <div>
+              <label for="startDate">開始日</label>
+              <input type="date" id="startDate" required />
+            </div>
+            <div>
+              <label for="endDate">終了日</label>
+              <input type="date" id="endDate" required />
+            </div>
+            <div>
+              <label for="duration">所要日数（営業日）</label>
+              <input type="number" id="duration" min="1" value="1" />
+            </div>
+          </div>
+          <div class="field-grid cols-3">
+            <div>
+              <label for="fixedEnd">固定日（完了日）</label>
+              <input type="date" id="fixedEnd" />
+            </div>
+            <div>
+              <label>&nbsp;</label>
+              <button type="button" class="secondary" id="recalcFromFixed">固定日から逆算</button>
+            </div>
+            <div>
+              <label for="color">バー色</label>
+              <input type="color" id="color" value="#2563eb" />
+            </div>
+          </div>
+          <div>
+            <label for="memo">メモ</label>
+            <textarea id="memo" placeholder="スマホからメモを残せます"></textarea>
+          </div>
+          <div class="toolbar" style="justify-content:flex-end;">
+            <button type="button" class="secondary" id="resetForm">リセット</button>
+            <button type="button" class="danger" id="deleteTask" style="display:none;">削除</button>
+            <button type="submit" class="primary" id="saveTask">保存</button>
+          </div>
+        </form>
+      </div>
+    </section>
 
-  <!-- フィルタ & 集計 -->
-  <section class="card section">
-    <div class="totals">
-      <div class="row" style="gap:8px">
-        <label>表示する年月</label>
-        <input type="month" id="monthFilter">
-      </div>
-      <div>
-        <strong>月間合計距離：</strong>
-        <span id="monthlyTotal">0.0</span> km
-      </div>
-      <div class="right">
-        <button class="btn secondary" id="exportCsv">CSVエクスポート</button>
-        <button class="btn secondary" id="deleteMonth">この月を全削除</button>
-      </div>
-    </div>
-  </section>
+    <section class="card admin-only">
+      <header class="section-header">
+        <h2>工程一覧</h2>
+      </header>
+      <div class="card-body" id="taskList"></div>
+    </section>
 
-  <!-- 一覧 -->
-  <section class="card section">
-    <div style="overflow:auto">
-      <table id="table">
+    <section class="card public-only" id="publicInfo">
+      <header class="section-header">
+        <h2>工程一覧</h2>
+      </header>
+      <div class="card-body" id="publicList"></div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'process-planner-state-v1';
+    const MEMORY_KEY = 'process-planner-memory-v1';
+
+    const defaultState = () => ({
+      tasks: [],
+      range: '2w',
+      zoom: 1,
+      anchorDate: formatISO(new Date()),
+    });
+
+    let state = loadState();
+    let memory = loadMemory();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return defaultState();
+        const parsed = JSON.parse(raw);
+        return {
+          ...defaultState(),
+          ...parsed,
+          tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+        };
+      } catch (e) {
+        console.warn('state load failed', e);
+        return defaultState();
+      }
+    }
+
+    function loadMemory() {
+      try {
+        const raw = localStorage.getItem(MEMORY_KEY);
+        if (!raw) return { names: [], owners: [], categories: [] };
+        const parsed = JSON.parse(raw);
+        return {
+          names: parsed.names ?? [],
+          owners: parsed.owners ?? [],
+          categories: parsed.categories ?? [],
+        };
+      } catch (e) {
+        console.warn('memory load failed', e);
+        return { names: [], owners: [], categories: [] };
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function saveMemory() {
+      localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
+    }
+
+    const today = new Date();
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+    const els = {
+      timeline: document.getElementById('timeline'),
+      range: document.getElementById('rangeSelect'),
+      zoom: document.getElementById('zoomSelect'),
+      anchorDate: document.getElementById('anchorDate'),
+      prevRange: document.getElementById('prevRange'),
+      nextRange: document.getElementById('nextRange'),
+      todayBtn: document.getElementById('todayBtn'),
+      adminViewBtn: document.getElementById('adminViewBtn'),
+      publicViewBtn: document.getElementById('publicViewBtn'),
+      copyPublicLink: document.getElementById('copyPublicLink'),
+      downloadExcel: document.getElementById('downloadExcel'),
+      taskForm: document.getElementById('taskForm'),
+      taskList: document.getElementById('taskList'),
+      publicList: document.getElementById('publicList'),
+      taskId: document.getElementById('taskId'),
+      taskName: document.getElementById('taskName'),
+      owner: document.getElementById('owner'),
+      category: document.getElementById('category'),
+      startDate: document.getElementById('startDate'),
+      endDate: document.getElementById('endDate'),
+      duration: document.getElementById('duration'),
+      fixedEnd: document.getElementById('fixedEnd'),
+      lineStyle: document.getElementById('lineStyle'),
+      dependency: document.getElementById('dependency'),
+      color: document.getElementById('color'),
+      memo: document.getElementById('memo'),
+      resetForm: document.getElementById('resetForm'),
+      deleteTask: document.getElementById('deleteTask'),
+      recalcFromFixed: document.getElementById('recalcFromFixed'),
+    };
+
+    const adminSections = document.querySelectorAll('.admin-only');
+    const publicSections = document.querySelectorAll('.public-only');
+
+    const urlParams = new URLSearchParams(location.search);
+    const modeFromUrl = urlParams.get('mode');
+    let currentMode = modeFromUrl === 'public' ? 'public' : 'admin';
+
+    init();
+
+    function init() {
+      els.range.value = state.range;
+      els.zoom.value = String(state.zoom);
+      els.anchorDate.value = state.anchorDate;
+      renderTimeline();
+      renderTaskList();
+      renderPublicList();
+      populateMemoryLists();
+      populateDependencyList();
+      applyMode();
+      bindEvents();
+    }
+
+    function bindEvents() {
+      els.range.addEventListener('change', () => {
+        state.range = els.range.value;
+        adjustAnchorForRange();
+        saveState();
+        renderTimeline();
+      });
+      els.zoom.addEventListener('change', () => {
+        state.zoom = Number(els.zoom.value);
+        saveState();
+        renderTimeline();
+      });
+      els.anchorDate.addEventListener('change', () => {
+        if (els.anchorDate.value) {
+          state.anchorDate = els.anchorDate.value;
+          saveState();
+          renderTimeline();
+        }
+      });
+      els.prevRange.addEventListener('click', () => shiftAnchor(-1));
+      els.nextRange.addEventListener('click', () => shiftAnchor(1));
+      els.todayBtn.addEventListener('click', () => {
+        state.anchorDate = formatISO(today);
+        els.anchorDate.value = state.anchorDate;
+        saveState();
+        renderTimeline();
+      });
+      els.taskForm.addEventListener('submit', handleFormSubmit);
+      els.resetForm.addEventListener('click', resetForm);
+      els.deleteTask.addEventListener('click', handleDeleteTask);
+      els.recalcFromFixed.addEventListener('click', handleRecalcFromFixed);
+      els.startDate.addEventListener('change', syncDurationFromDates);
+      els.endDate.addEventListener('change', syncDurationFromDates);
+      els.duration.addEventListener('change', handleDurationChange);
+      els.adminViewBtn.addEventListener('click', () => setMode('admin'));
+      els.publicViewBtn.addEventListener('click', () => setMode('public'));
+      els.copyPublicLink.addEventListener('click', copyPublicUrl);
+      els.downloadExcel.addEventListener('click', downloadExcel);
+      window.addEventListener('resize', renderTimeline);
+    }
+
+    function setMode(nextMode) {
+      currentMode = nextMode;
+      if (nextMode === 'public') {
+        urlParams.set('mode', 'public');
+      } else {
+        urlParams.delete('mode');
+      }
+      const newUrl = `${location.pathname}?${urlParams.toString()}`.replace(/\?$/, '');
+      history.replaceState({}, '', newUrl);
+      applyMode();
+      renderTimeline();
+      renderTaskList();
+      renderPublicList();
+    }
+
+    function applyMode() {
+      const isPublic = currentMode === 'public';
+      els.adminViewBtn.classList.toggle('active', !isPublic);
+      els.publicViewBtn.classList.toggle('active', isPublic);
+      adminSections.forEach((el) => (el.style.display = isPublic ? 'none' : 'block'));
+      publicSections.forEach((el) => (el.style.display = isPublic ? 'block' : 'none'));
+    }
+
+    function adjustAnchorForRange() {
+      const anchor = parseISO(state.anchorDate);
+      if (state.range === '1m') {
+        anchor.setDate(1);
+      } else if (state.range === '3m') {
+        anchor.setDate(1);
+        anchor.setMonth(anchor.getMonth() - (anchor.getMonth() % 3));
+      }
+      state.anchorDate = formatISO(anchor);
+      els.anchorDate.value = state.anchorDate;
+    }
+
+    function shiftAnchor(direction) {
+      const anchor = parseISO(state.anchorDate);
+      if (state.range === '2w') {
+        anchor.setDate(anchor.getDate() + direction * 14);
+      } else if (state.range === '1m') {
+        anchor.setMonth(anchor.getMonth() + direction);
+        anchor.setDate(1);
+      } else {
+        anchor.setMonth(anchor.getMonth() + direction * 3);
+        anchor.setDate(1);
+      }
+      state.anchorDate = formatISO(anchor);
+      els.anchorDate.value = state.anchorDate;
+      saveState();
+      renderTimeline();
+    }
+
+    function getRangeDates() {
+      const anchor = parseISO(state.anchorDate);
+      let startDate = new Date(anchor);
+      let totalDays = 14;
+      if (state.range === '1m') {
+        startDate.setDate(1);
+        totalDays = daysInMonth(startDate.getFullYear(), startDate.getMonth());
+      } else if (state.range === '3m') {
+        startDate.setDate(1);
+        const month = startDate.getMonth();
+        const year = startDate.getFullYear();
+        const daysFirstMonth = daysInMonth(year, month);
+        const secondMonth = (month + 1) % 12;
+        const secondYear = month + 1 >= 12 ? year + 1 : year;
+        const daysSecondMonth = daysInMonth(secondYear, secondMonth);
+        const thirdMonth = (month + 2) % 12;
+        const thirdYear = month + 2 >= 12 ? year + 1 : year;
+        const daysThirdMonth = daysInMonth(thirdYear, thirdMonth);
+        totalDays = daysFirstMonth + daysSecondMonth + daysThirdMonth;
+      }
+      const dates = [];
+      for (let i = 0; i < totalDays; i++) {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i);
+        dates.push(d);
+      }
+      return dates;
+    }
+
+    function renderTimeline() {
+      const dates = getRangeDates();
+      if (!dates.length) return;
+      const dayWidth = 38 * state.zoom;
+      els.timeline.style.setProperty('--day-width', `${dayWidth}px`);
+      els.timeline.innerHTML = '';
+      const header = document.createElement('div');
+      header.className = 'timeline-header';
+      const label = document.createElement('div');
+      label.className = 'timeline-label';
+      label.textContent = '工程';
+      const dayStrip = document.createElement('div');
+      dayStrip.className = 'timeline-day-strip';
+      dates.forEach((date) => {
+        const cell = document.createElement('div');
+        cell.className = 'day-cell';
+        const formatted = `${date.getMonth() + 1}/${date.getDate()}`;
+        cell.textContent = formatted;
+        if (isHoliday(date)) cell.classList.add('weekend');
+        if (isSameDate(date, today)) cell.classList.add('today');
+        dayStrip.appendChild(cell);
+      });
+      header.appendChild(label);
+      header.appendChild(dayStrip);
+      els.timeline.appendChild(header);
+
+      const rangeStart = dates[0];
+      const rangeLength = dates.length;
+      const rangeEnd = addDays(rangeStart, rangeLength - 1);
+      const totalWidth = rangeLength * dayWidth;
+
+      const todayIndex = dates.findIndex((d) => isSameDate(d, today));
+
+      state.tasks
+        .slice()
+        .sort((a, b) => (a.start > b.start ? 1 : -1))
+        .forEach((task) => {
+          const row = document.createElement('div');
+          row.className = 'timeline-row';
+          const taskLabel = document.createElement('div');
+          taskLabel.className = 'timeline-label';
+          taskLabel.innerHTML = `${escapeHtml(task.name)}<span class="badge">${task.lineStyle === 'dashed' ? '予定' : '実績'}</span>`;
+          if (task.owner) {
+            const meta = document.createElement('span');
+            meta.className = 'task-meta';
+            meta.textContent = task.owner;
+            taskLabel.appendChild(meta);
+          }
+          row.appendChild(taskLabel);
+
+          const strip = document.createElement('div');
+          strip.className = 'timeline-day-strip';
+          strip.style.setProperty('width', `${totalWidth}px`);
+          strip.style.position = 'relative';
+          dates.forEach((d) => {
+            const cell = document.createElement('div');
+            cell.className = 'day-cell';
+            if (isHoliday(d)) cell.classList.add('weekend');
+            if (isSameDate(d, today)) cell.classList.add('today');
+            strip.appendChild(cell);
+          });
+
+          const taskStart = parseISO(task.start);
+          const taskEnd = parseISO(task.end);
+          if (taskStart <= rangeEnd && taskEnd >= rangeStart) {
+            const bar = document.createElement('div');
+            bar.className = 'task-bar';
+            bar.dataset.id = task.id;
+            bar.dataset.mode = currentMode === 'public' ? 'read-only' : 'editable';
+            if (task.lineStyle === 'dashed') bar.classList.add('dashed');
+            const color = task.color || '#2563eb';
+            bar.style.borderColor = color;
+            bar.style.color = color;
+            bar.style.background = task.lineStyle === 'dashed'
+              ? hexToRgba(color, 0.12)
+              : hexToRgba(color, 0.2);
+            bar.title = `${task.name}\n${task.start} → ${task.end}`;
+            bar.innerHTML = `<span>${escapeHtml(task.name)}</span>`;
+            positionTaskBar(bar, task, rangeStart, dayWidth, rangeLength);
+
+            if (currentMode === 'admin') {
+              attachDrag(bar, task.id, dayWidth, rangeStart, rangeLength);
+              bar.addEventListener('click', () => fillForm(task.id));
+            }
+            strip.appendChild(bar);
+          }
+
+          if (todayIndex >= 0) {
+            const line = document.createElement('div');
+            line.className = 'today-line';
+            line.style.left = `${todayIndex * dayWidth + dayWidth / 2}px`;
+            strip.appendChild(line);
+          }
+
+          row.appendChild(strip);
+          els.timeline.appendChild(row);
+        });
+
+      if (!state.tasks.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = '工程がまだ登録されていません。管理ビューから追加してください。';
+        els.timeline.appendChild(empty);
+      }
+    }
+
+    function renderTaskList() {
+      if (currentMode === 'public') return;
+      if (!state.tasks.length) {
+        els.taskList.innerHTML = '<div class="empty-state">工程がありません。追加してください。</div>';
+        return;
+      }
+      const table = document.createElement('table');
+      table.className = 'list-table';
+      table.innerHTML = `
         <thead>
           <tr>
-            <th>日付</th>
-            <th>曜日</th>
-            <th>開始</th>
-            <th>終了</th>
-            <th>メーター開始</th>
-            <th>メーター終了</th>
-            <th>距離</th>
-            <th>運転者</th>
-            <th>行き先</th>
-            <th>酒前</th>
-            <th>酒後</th>
-            <th></th>
+            <th>工程名</th>
+            <th>担当</th>
+            <th>期間</th>
+            <th>営業日数</th>
+            <th>依存先</th>
           </tr>
         </thead>
         <tbody></tbody>
-      </table>
-    </div>
-  </section>
-</main>
-
-<script>
-// === あなたのGAS URL（/exec） ===
-const API_BASE = 'https://script.google.com/macros/s/AKfycbyMxpKLVGJuL5m6e-2Pxe4Hq-10i634lwPQ8N2By3hgVvMwodo6Y9wroMM7Lb8ryRH3ng/exec';
-
-// ---- API helpers ----
-async function apiGet(params){
-  const url = API_BASE + '?' + new URLSearchParams(params).toString();
-  const res = await fetch(url, { method:'GET' });
-  if(!res.ok) throw new Error('GET ' + res.status);
-  return res.json();
-}
-async function apiPost(payload){
-  // プリフライト回避のため、ヘッダを付けず FormData で送る
-  const fd = new FormData();
-  fd.append('body', JSON.stringify(payload));
-
-  const res = await fetch(API_BASE, { method:'POST', body: fd });
-  if(!res.ok){ const t=await res.text().catch(()=> ''); throw new Error('POST '+res.status+' '+t); }
-  return res.json();
-}
-
-// ---- Utils ----
-const jpWeek = ["日","月","火","水","木","金","土"];
-const pad = n => String(n).padStart(2,"0");
-const isNum = v => typeof v === "number" && !Number.isNaN(v);
-const toNumOrNull = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
-
-function makeTimeOptions(){
-  const selStart = document.getElementById("startTime");
-  const selEnd = document.getElementById("endTime");
-  selStart.innerHTML = ""; selEnd.innerHTML = "";
-  for(let h=0; h<24; h++){
-    for(let m=0; m<60; m+=10){
-      const v = `${pad(h)}:${pad(m)}`;
-      selStart.appendChild(new Option(v, v));
-      selEnd.appendChild(new Option(v, v));
+      `;
+      const tbody = table.querySelector('tbody');
+      state.tasks
+        .slice()
+        .sort((a, b) => (a.start > b.start ? 1 : -1))
+        .forEach((task) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${escapeHtml(task.name)}</td>
+            <td>${escapeHtml(task.owner || '')}</td>
+            <td>${task.start}〜${task.end}</td>
+            <td style="text-align:center;">${task.duration}</td>
+            <td>${dependencyLabel(task.dependency)}</td>
+          `;
+          tr.addEventListener('click', () => fillForm(task.id));
+          tbody.appendChild(tr);
+        });
+      els.taskList.innerHTML = '';
+      els.taskList.appendChild(table);
     }
-  }
-  selStart.value="09:00"; selEnd.value="18:00";
-}
-function getWeekdayStr(dateStr){
-  if(!dateStr) return "";
-  const d = new Date(dateStr + "T00:00:00");
-  if(Number.isNaN(d.getTime())) return "";
-  return jpWeek[d.getDay()];
-}
-function ymKey(dateStr){
-  const d = new Date(dateStr + "T00:00:00");
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
-}
-function calcDistance(){
-  const s = toNumOrNull(document.getElementById("odoStart").value);
-  const e = toNumOrNull(document.getElementById("odoEnd").value);
-  const out = document.getElementById("distance");
-  if(isNum(s) && isNum(e) && e>=s) out.value=(e-s).toFixed(1);
-  else out.value="";
-}
 
-// ---- Server storage (GAS) ----
-async function loadMonth(month){
-  const j = await apiGet({ action:'list', month });
-  if(!j.ok) throw new Error(j.error||'list failed');
-  return Array.isArray(j.rows) ? j.rows : [];
-}
-async function saveRowToServer(row){
-  const j = await apiPost({ action:'save', row });
-  if(!j.ok) throw new Error(j.error||'save failed');
-}
-async function deleteMonthOnServer(month){
-  const j = await apiPost({ action:'deletemonth', month });
-  if(!j.ok) throw new Error(j.error||'delete failed');
-}
-async function fetchDestHistory(){
-  const j = await apiGet({ action:'destlist' });
-  if(!j.ok) throw new Error(j.error||'destlist failed');
-  return Array.isArray(j.list) ? j.list : [];
-}
-function renderDestListFrom(list){
-  const dl = document.getElementById("destList");
-  dl.innerHTML = "";
-  list.forEach(txt => dl.appendChild(new Option(txt, txt)));
-}
-
-// ---- Table render（サーバデータを日付→開始で並べ替え）----
-function safeFixed(value, digits=1){ return isNum(value) ? value.toFixed(digits) : ""; }
-
-async function renderTable(){
-  const month = document.getElementById("monthFilter").value;
-  const tbody = document.querySelector("#table tbody");
-  tbody.innerHTML = "";
-  let total = 0;
-
-  const rows = (await loadMonth(month))
-    .slice()
-    .sort((a,b)=>{
-      const da = new Date((a.date||"") + "T00:00:00").getTime();
-      const db = new Date((b.date||"") + "T00:00:00").getTime();
-      if(da !== db) return da - db;
-      return String(a.startTime||"").localeCompare(String(b.startTime||""));
-    });
-
-  rows.forEach((r) => {
-    const tr = document.createElement("tr");
-    const cells = [
-      r.date || "", r.weekday || "",
-      r.startTime || "", r.endTime || "",
-      safeFixed(r.odoStart), safeFixed(r.odoEnd), safeFixed(r.distance),
-      r.driver || "", r.destination || "",
-      r.alcoholBefore ? "✓" : "", r.alcoholAfter ? "✓" : ""
-    ];
-    cells.forEach(c=>{
-      const td=document.createElement("td"); td.textContent=(c ?? ""); tr.appendChild(td);
-    });
-    const tdAct = document.createElement("td");
-    const del = document.createElement("button");
-    del.textContent="削除"; del.className="btn secondary";
-    del.onclick = async () => {
-      if(!confirm(`${month} の全データを削除します。よろしいですか？`)) return;
-      await deleteMonthOnServer(month);
-      await renderTable();
-    };
-    tdAct.appendChild(del); tr.appendChild(tdAct);
-    tbody.appendChild(tr);
-    if(isNum(r.distance)) total += r.distance;
-  });
-  document.getElementById("monthlyTotal").textContent = total.toFixed(1);
-}
-
-// CSVエクスポート（サーバから読み直して生成）
-async function exportCSV(){
-  const m = document.getElementById("monthFilter").value;
-  const rows = (await loadMonth(m)).slice().sort((a,b)=>{
-    const da = new Date((a.date||"")+"T00:00:00").getTime();
-    const db = new Date((b.date||"")+"T00:00:00").getTime();
-    if(da!==db) return da-db;
-    return String(a.startTime||"").localeCompare(String(b.startTime||""));
-  });
-  const header = ["日付","曜日","開始","終了","メーター開始","メーター終了","距離(km)","運転者","行き先","酒前","酒後"];
-  const lines = [header.join(",")].concat(rows.map(r=>[
-    r.date||"", r.weekday||"", r.startTime||"", r.endTime||"",
-    isNum(r.odoStart)?r.odoStart:"", isNum(r.odoEnd)?r.odoEnd:"", isNum(r.distance)?r.distance:"",
-    `"${String(r.driver||"").replace(/"/g,'""')}"`,
-    `"${String(r.destination||"").replace(/"/g,'""')}"`,
-    r.alcoholBefore?1:0, r.alcoholAfter?1:0
-  ].join(",")));
-  const blob = new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `drivelog_${m}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-// ---- Init ----
-(function init(){
-  makeTimeOptions();
-
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-  document.getElementById("date").value = todayStr;
-  document.getElementById("weekday").textContent = `（${getWeekdayStr(todayStr)}）`;
-  document.getElementById("monthFilter").value = ymKey(todayStr);
-
-  // Events
-  document.getElementById("date").addEventListener("change", e=>{
-    const d = e.target.value;
-    document.getElementById("weekday").textContent = `（${getWeekdayStr(d)}）`;
-    document.getElementById("monthFilter").value = ymKey(d);
-    renderTable();
-  });
-  document.getElementById("odoStart").addEventListener("input", calcDistance);
-  document.getElementById("odoEnd").addEventListener("input", calcDistance);
-
-  document.getElementById("save").addEventListener("click", async ()=>{
-    try{
-      const date = document.getElementById("date").value;
-      if(!date){ alert("日付を入力してください"); return; }
-
-      const odoStart = toNumOrNull(document.getElementById("odoStart").value);
-      const odoEnd   = toNumOrNull(document.getElementById("odoEnd").value);
-      if(isNum(odoStart) && isNum(odoEnd) && odoEnd < odoStart){
-        alert("メーター終了はメーター開始以上にしてください");
+    function renderPublicList() {
+      if (!state.tasks.length) {
+        publicSections.forEach((el) => (el.style.display = currentMode === 'public' ? 'block' : 'none'));
+        els.publicList.innerHTML = '<div class="empty-state">工程は登録されていません。</div>';
         return;
       }
+      const list = document.createElement('div');
+      list.style.display = 'grid';
+      list.style.gap = '12px';
+      state.tasks
+        .slice()
+        .sort((a, b) => (a.start > b.start ? 1 : -1))
+        .forEach((task) => {
+          const row = document.createElement('div');
+          row.style.border = '1px solid var(--border)';
+          row.style.borderRadius = '12px';
+          row.style.padding = '12px';
+          row.innerHTML = `
+            <div style="font-weight:600;display:flex;gap:8px;align-items:center;">
+              <span>${escapeHtml(task.name)}</span>
+              <span class="badge">${task.lineStyle === 'dashed' ? '予定' : '実績'}</span>
+            </div>
+            <div class="muted" style="margin-top:4px;">${task.start}〜${task.end}（${task.duration}日）</div>
+            ${task.owner ? `<div style="margin-top:6px;">担当：${escapeHtml(task.owner)}</div>` : ''}
+            ${task.memo ? `<div style="margin-top:6px;font-size:13px;">メモ：${escapeHtml(task.memo)}</div>` : ''}
+          `;
+          list.appendChild(row);
+        });
+      els.publicList.innerHTML = '';
+      els.publicList.appendChild(list);
+    }
 
-      const distanceField = document.getElementById("distance").value;
-      const calc = (isNum(odoStart)&&isNum(odoEnd)) ? (odoEnd - odoStart) : null;
-      const distance = toNumOrNull(distanceField) ?? calc;
+    function dependencyLabel(id) {
+      if (!id) return '';
+      const task = state.tasks.find((t) => t.id === id);
+      return task ? task.name : '';
+    }
 
-      const row = {
-        date,
-        weekday: getWeekdayStr(date),
-        startTime: document.getElementById("startTime").value || "",
-        endTime: document.getElementById("endTime").value || "",
-        odoStart: odoStart ?? null,
-        odoEnd:   odoEnd   ?? null,
-        distance: distance ?? null,
-        driver: (document.getElementById("driver").value || "").trim(),
-        destination: (document.getElementById("destination").value || "").trim(),
-        alcoholBefore: document.getElementById("alcoholBefore").checked,
-        alcoholAfter: document.getElementById("alcoholAfter").checked
+    function populateDependencyList() {
+      els.dependency.innerHTML = '<option value="">なし</option>';
+      state.tasks.forEach((task) => {
+        const opt = document.createElement('option');
+        opt.value = task.id;
+        opt.textContent = task.name;
+        els.dependency.appendChild(opt);
+      });
+    }
+
+    function populateMemoryLists() {
+      populateList('taskNameList', memory.names);
+      populateList('ownerList', memory.owners);
+      populateList('categoryList', memory.categories);
+    }
+
+    function populateList(id, items) {
+      const list = document.getElementById(id);
+      list.innerHTML = '';
+      [...new Set(items)].slice(-20).forEach((item) => {
+        const option = document.createElement('option');
+        option.value = item;
+        list.appendChild(option);
+      });
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      const id = els.taskId.value || generateId();
+      const existingIndex = state.tasks.findIndex((t) => t.id === id);
+      const start = els.startDate.value;
+      const end = els.endDate.value;
+      if (!start || !end) return;
+      if (start > end) {
+        alert('開始日は終了日より前に設定してください。');
+        return;
+      }
+      const task = {
+        id,
+        name: els.taskName.value.trim(),
+        owner: els.owner.value.trim(),
+        category: els.category.value.trim(),
+        start,
+        end,
+        duration: Math.max(1, Number(els.duration.value) || businessDaysBetween(parseISO(start), parseISO(end))),
+        fixedEnd: els.fixedEnd.value || '',
+        lineStyle: els.lineStyle.value,
+        dependency: els.dependency.value || '',
+        color: els.color.value,
+        memo: els.memo.value.trim(),
       };
 
-      await saveRowToServer(row);
-      alert("保存しました");
+      let storedTask;
+      if (existingIndex >= 0) {
+        state.tasks[existingIndex] = { ...state.tasks[existingIndex], ...task };
+        storedTask = state.tasks[existingIndex];
+      } else {
+        state.tasks.push(task);
+        storedTask = task;
+      }
 
-      const list = await fetchDestHistory();
-      renderDestListFrom(list);
+      storedTask.duration = businessDaysBetween(parseISO(storedTask.start), parseISO(storedTask.end));
+      if (storedTask.fixedEnd) {
+        storedTask.fixedEnd = storedTask.end;
+      }
 
-      await renderTable();
-    }catch(err){
-      console.error(err);
-      alert("保存中にエラー: " + err.message);
+      if (storedTask.dependency) {
+        if (storedTask.dependency === storedTask.id) {
+          storedTask.dependency = '';
+        }
+      }
+
+      if (storedTask.dependency) {
+        const parent = state.tasks.find((t) => t.id === storedTask.dependency);
+        if (parent) {
+          const depStart = nextBusinessDay(parseISO(parent.end));
+          storedTask.start = formatISO(depStart);
+          const depEnd = addBusinessDays(depStart, storedTask.duration - 1);
+          storedTask.end = formatISO(depEnd);
+          if (storedTask.fixedEnd) {
+            storedTask.fixedEnd = storedTask.end;
+          }
+        }
+      }
+
+      updateMemory(task);
+      saveState();
+      populateDependencyList();
+      propagateDependencies(storedTask.id);
+      renderTimeline();
+      renderTaskList();
+      renderPublicList();
+      resetForm();
+      alert('保存しました');
     }
-  });
 
-  document.getElementById("clearForm").addEventListener("click", ()=>{
-    ["driver","destination","odoStart","odoEnd","distance"].forEach(id=>document.getElementById(id).value="");
-    document.getElementById("startTime").value="09:00";
-    document.getElementById("endTime").value="18:00";
-    document.getElementById("alcoholBefore").checked=false;
-    document.getElementById("alcoholAfter").checked=false;
-  });
-
-  document.getElementById("monthFilter").addEventListener("change", ()=>renderTable());
-  document.getElementById("exportCsv").addEventListener("click", ()=>exportCSV());
-  document.getElementById("deleteMonth").addEventListener("click", async ()=>{
-    const m = document.getElementById("monthFilter").value;
-    if(confirm(`${m} の全データを削除します。よろしいですか？`)){
-      await deleteMonthOnServer(m);
-      await renderTable();
+    function updateMemory(task) {
+      if (task.name) {
+        memory.names = upsert(memory.names, task.name);
+      }
+      if (task.owner) {
+        memory.owners = upsert(memory.owners, task.owner);
+      }
+      if (task.category) {
+        memory.categories = upsert(memory.categories, task.category);
+      }
+      saveMemory();
+      populateMemoryLists();
     }
-  });
 
-  (async ()=>{
-    try{
-      const list = await fetchDestHistory();
-      renderDestListFrom(list);
-    }catch(e){ console.warn('destlist failed', e); }
-    await renderTable();
-  })();
-})();
-</script>
+    function upsert(list, value) {
+      const next = list.filter((item) => item !== value);
+      next.push(value);
+      return next.slice(-30);
+    }
+
+    function handleDeleteTask() {
+      if (!els.taskId.value) return;
+      if (!confirm('この工程を削除しますか？')) return;
+      state.tasks = state.tasks.filter((t) => t.id !== els.taskId.value);
+      state.tasks = state.tasks.map((task) => (task.dependency === els.taskId.value ? { ...task, dependency: '' } : task));
+      saveState();
+      populateDependencyList();
+      renderTimeline();
+      renderTaskList();
+      renderPublicList();
+      resetForm();
+    }
+
+    function resetForm() {
+      els.taskForm.reset();
+      els.taskId.value = '';
+      els.duration.value = 1;
+      els.lineStyle.value = 'solid';
+      els.deleteTask.style.display = 'none';
+    }
+
+    function fillForm(id) {
+      const task = state.tasks.find((t) => t.id === id);
+      if (!task) return;
+      els.taskId.value = task.id;
+      els.taskName.value = task.name;
+      els.owner.value = task.owner;
+      els.category.value = task.category;
+      els.startDate.value = task.start;
+      els.endDate.value = task.end;
+      els.duration.value = task.duration || businessDaysBetween(parseISO(task.start), parseISO(task.end));
+      els.fixedEnd.value = task.fixedEnd || '';
+      els.lineStyle.value = task.lineStyle;
+      els.dependency.value = task.dependency || '';
+      els.color.value = task.color || '#2563eb';
+      els.memo.value = task.memo || '';
+      els.deleteTask.style.display = 'inline-flex';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function attachDrag(bar, id, dayWidth, rangeStart, rangeLength) {
+      const task = state.tasks.find((t) => t.id === id);
+      if (!task) return;
+      const rangeStartDate = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate());
+      const handles = {
+        start: createHandle('start'),
+        end: createHandle('end'),
+        move: createHandle('move'),
+      };
+      bar.appendChild(handles.start);
+      bar.appendChild(handles.end);
+      bar.appendChild(handles.move);
+
+      Object.entries(handles).forEach(([type, handle]) => {
+        handle.addEventListener('pointerdown', (event) => {
+          event.preventDefault();
+          handle.setPointerCapture(event.pointerId);
+          const initialStart = parseISO(task.start);
+          const initialEnd = parseISO(task.end);
+          const startX = event.clientX;
+          let lastDelta = 0;
+
+          const moveListener = (e) => {
+            const deltaPx = e.clientX - startX;
+            const deltaDays = Math.round(deltaPx / dayWidth);
+            if (deltaDays === lastDelta) return;
+            lastDelta = deltaDays;
+            if (type === 'move') {
+              const newStart = addDays(initialStart, deltaDays);
+              const newEnd = addDays(initialEnd, deltaDays);
+              task.start = formatISO(newStart);
+              task.end = formatISO(newEnd);
+            } else if (type === 'start') {
+              let newStart = addDays(initialStart, deltaDays);
+              const currentEnd = parseISO(task.end);
+              if (newStart > currentEnd) {
+                newStart = currentEnd;
+              }
+              task.start = formatISO(newStart);
+            } else if (type === 'end') {
+              let newEnd = addDays(initialEnd, deltaDays);
+              const currentStart = parseISO(task.start);
+              if (newEnd < currentStart) {
+                newEnd = currentStart;
+              }
+              task.end = formatISO(newEnd);
+            }
+            task.duration = businessDaysBetween(parseISO(task.start), parseISO(task.end));
+            if (task.fixedEnd) {
+              task.fixedEnd = task.end;
+            }
+            positionTaskBar(bar, task, rangeStartDate, dayWidth, rangeLength);
+            bar.title = `${task.name}\n${task.start} → ${task.end}`;
+            if (els.taskId.value === task.id) {
+              els.startDate.value = task.start;
+              els.endDate.value = task.end;
+              els.duration.value = task.duration;
+            }
+          };
+
+          const endListener = () => {
+            handle.removeEventListener('pointermove', moveListener);
+            handle.removeEventListener('pointerup', endListener);
+            handle.removeEventListener('pointercancel', endListener);
+            handle.releasePointerCapture(event.pointerId);
+            task.duration = businessDaysBetween(parseISO(task.start), parseISO(task.end));
+            if (task.fixedEnd) {
+              task.fixedEnd = task.end;
+            }
+            saveState();
+            propagateDependencies(task.id);
+            renderTimeline();
+            renderTaskList();
+            renderPublicList();
+          };
+
+          handle.addEventListener('pointermove', moveListener);
+          handle.addEventListener('pointerup', endListener, { once: true });
+          handle.addEventListener('pointercancel', endListener, { once: true });
+        });
+      });
+    }
+
+    function createHandle(type) {
+      const span = document.createElement('span');
+      span.className = `handle ${type}`;
+      return span;
+    }
+
+    function propagateDependencies(taskId) {
+      const visited = new Set();
+      const taskMap = new Map(state.tasks.map((t) => [t.id, t]));
+
+      function update(id) {
+        if (visited.has(id)) return;
+        visited.add(id);
+        const task = taskMap.get(id);
+        if (!task) return;
+        const dependents = state.tasks.filter((t) => t.dependency === id);
+        dependents.forEach((dep) => {
+          const base = parseISO(task.end);
+          const start = nextBusinessDay(base);
+          dep.start = formatISO(start);
+          const duration = dep.duration || 1;
+          const end = addBusinessDays(start, duration - 1);
+          dep.end = formatISO(end);
+          dep.duration = businessDaysBetween(parseISO(dep.start), parseISO(dep.end));
+          if (dep.fixedEnd) {
+            dep.fixedEnd = dep.end;
+          }
+          update(dep.id);
+        });
+      }
+      update(taskId);
+      saveState();
+    }
+
+    function positionTaskBar(bar, task, rangeStart, dayWidth, rangeLength) {
+      const start = parseISO(task.start);
+      const end = parseISO(task.end);
+      const rangeStartDate = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate());
+      const rangeEnd = addDays(rangeStartDate, rangeLength - 1);
+      if (end < rangeStartDate || start > rangeEnd) {
+        bar.style.display = 'none';
+        return false;
+      }
+      bar.style.display = 'flex';
+      const startClamped = start < rangeStartDate ? rangeStartDate : start;
+      const endClamped = end > rangeEnd ? rangeEnd : end;
+      const offsetDays = Math.floor((startClamped - rangeStartDate) / MS_PER_DAY);
+      const spanDays = Math.floor((endClamped - rangeStartDate) / MS_PER_DAY) - offsetDays + 1;
+      bar.style.left = `${offsetDays * dayWidth + 8}px`;
+      bar.style.width = `${Math.max(dayWidth * 0.6, spanDays * dayWidth - 4)}px`;
+      return true;
+    }
+
+    function copyPublicUrl() {
+      const url = new URL(location.href);
+      url.searchParams.set('mode', 'public');
+      navigator.clipboard
+        .writeText(url.toString())
+        .then(() => alert('公開URLをコピーしました'))
+        .catch(() => alert('コピーに失敗しました。ブラウザの設定を確認してください。'));
+    }
+
+    function downloadExcel() {
+      if (!state.tasks.length) {
+        alert('工程がありません');
+        return;
+      }
+      const rows = [
+        ['工程名', '担当', 'カテゴリ', '開始日', '終了日', '営業日数', '線種', '依存先', 'メモ'],
+        ...state.tasks.map((task) => [
+          task.name,
+          task.owner,
+          task.category,
+          task.start,
+          task.end,
+          task.duration,
+          task.lineStyle === 'dashed' ? '予定' : '実績',
+          dependencyLabel(task.dependency),
+          task.memo,
+        ]),
+      ];
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, '工程表');
+      XLSX.writeFile(wb, `工程表_${formatISO(today)}.xlsx`);
+    }
+
+    function handleRecalcFromFixed() {
+      const fixed = els.fixedEnd.value;
+      const duration = Number(els.duration.value);
+      if (!fixed || !duration) {
+        alert('固定日と所要日数を入力してください');
+        return;
+      }
+      const end = parseISO(fixed);
+      const start = subtractBusinessDays(end, duration - 1);
+      els.startDate.value = formatISO(start);
+      els.endDate.value = formatISO(end);
+    }
+
+    function syncDurationFromDates() {
+      if (!els.startDate.value || !els.endDate.value) return;
+      if (els.startDate.value > els.endDate.value) return;
+      const start = parseISO(els.startDate.value);
+      const end = parseISO(els.endDate.value);
+      els.duration.value = businessDaysBetween(start, end);
+    }
+
+    function handleDurationChange() {
+      if (!els.startDate.value || !els.duration.value) return;
+      const start = parseISO(els.startDate.value);
+      const days = Number(els.duration.value);
+      const end = addBusinessDays(start, days - 1);
+      els.endDate.value = formatISO(end);
+    }
+
+    function addDays(date, num) {
+      const result = new Date(date);
+      result.setDate(result.getDate() + num);
+      return result;
+    }
+
+    function businessDaysBetween(start, end) {
+      let count = 0;
+      const current = new Date(start);
+      while (current <= end) {
+        if (!isHoliday(current)) count++;
+        current.setDate(current.getDate() + 1);
+      }
+      return Math.max(count, 1);
+    }
+
+    function addBusinessDays(start, days) {
+      const result = new Date(start);
+      while (days > 0) {
+        result.setDate(result.getDate() + 1);
+        if (!isHoliday(result)) {
+          days--;
+        }
+      }
+      return result;
+    }
+
+    function subtractBusinessDays(end, days) {
+      const result = new Date(end);
+      while (days > 0) {
+        result.setDate(result.getDate() - 1);
+        if (!isHoliday(result)) {
+          days--;
+        }
+      }
+      return result;
+    }
+
+    function nextBusinessDay(date) {
+      const next = new Date(date);
+      do {
+        next.setDate(next.getDate() + 1);
+      } while (isHoliday(next));
+      return next;
+    }
+
+    function isHoliday(date) {
+      const day = date.getDay();
+      return day === 0 || day === 6;
+    }
+
+    function isSameDate(a, b) {
+      return (
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate()
+      );
+    }
+
+    function formatISO(date) {
+      if (!(date instanceof Date)) return date;
+      return date.toISOString().slice(0, 10);
+    }
+
+    function parseISO(value) {
+      const [y, m, d] = value.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function daysInMonth(year, month) {
+      return new Date(year, month + 1, 0).getDate();
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[c]);
+    }
+
+    function generateId() {
+      return 't_' + Math.random().toString(36).slice(2, 9);
+    }
+
+    function hexToRgba(hex, alpha) {
+      let c = hex.replace('#', '');
+      if (c.length === 3) {
+        c = c.split('').map((ch) => ch + ch).join('');
+      }
+      const bigint = parseInt(c, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+  </script>
 </body>
 </html>
